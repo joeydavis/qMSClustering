@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>qMSClustering Module &mdash; qMSClustering 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="qMSClustering 0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="qMSClustering"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+	<li><a href="contents.html">documentation </a> &raquo;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/qMSClustering.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-qMSClustering">
+<span id="qmsclustering-module"></span><h1>qMSClustering Module<a class="headerlink" href="#module-qMSClustering" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="qMSClustering.SVD">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">SVD</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#SVD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.SVD" title="Permalink to this definition">¶</a></dt>
+<dd><p>SVD performs singular value decomposition on a 2D matrix dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>2D matrix</em>) &#8211; the 2D matrix to factor</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">array bearing U, Sig, Vh in that order</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.arePaired">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">arePaired</tt><big>(</big><em>a</em>, <em>b</em>, <em>groupings</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#arePaired"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.arePaired" title="Permalink to this definition">¶</a></dt>
+<dd><p>arePaired is a helper function, returns 1 if groupings[a] == groupings[b]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> (<em>int</em>) &#8211; index a</li>
+<li><strong>b</strong> (<em>int</em>) &#8211; index b</li>
+<li><strong>groupings</strong> (<em>list</em>) &#8211; list of grouping to check</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">1 if a, b are in the same group, 0 else</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.calcDistortion">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">calcDistortion</tt><big>(</big><em>cents</em>, <em>idx</em>, <em>data</em>, <em>m='euclidean'</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#calcDistortion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.calcDistortion" title="Permalink to this definition">¶</a></dt>
+<dd><p>calcDistortion is a  helper function that determines the distance between datasets and centroids</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cents</strong> (<em>2D matrix</em>) &#8211; a 2D matrix of the centroids (ordered)</li>
+<li><strong>idx</strong> (<em>list</em>) &#8211; a list of which vector in data is grouped with which centroid</li>
+<li><strong>data</strong> (<em>2D matrix</em>) &#8211; a 2D matrix of the data, we will determine the summed distance from each row in data to it centroid
+and then sum over all rows</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a float with the total distortion</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.calcSVDResid">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">calcSVDResid</tt><big>(</big><em>dataset</em>, <em>hashToAdd</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#calcSVDResid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.calcSVDResid" title="Permalink to this definition">¶</a></dt>
+<dd><p>calcSVDResid is a helper function that adds a new residual value to a hash bearing
+lists of residuals for each number of components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset</strong> (<em>dict, must contain &#8216;data&#8217;, &#8216;fractions&#8217;</em>) &#8211; a data dictionary with the dataset to be analyzed</li>
+<li><strong>hashToAdd</strong> (<em>dict with values as lists, this func will append one value to each list</em>) &#8211; a hash with keys as number of components used and values as list of variance observed</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a dict bearing lists for each number of components, the lists are the residuals observed at
+each component</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.clusterData">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">clusterData</tt><big>(</big><em>xdata</em>, <em>rowMethod=True</em>, <em>columnMethod=False</em>, <em>method='average'</em>, <em>metric='euclidean'</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#clusterData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.clusterData" title="Permalink to this definition">¶</a></dt>
+<dd><p>clusterData clusters the data either by row, by column, or both</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xdata</strong> &#8211; a data dictionary - the one to be transformed</li>
+<li><strong>rowMethod</strong> (<em>bool</em>) &#8211; a boolean asking if you want to flip on the rows (proteins get clustered)</li>
+<li><strong>columnMethod</strong> (<em>bool</em>) &#8211; a boolean asking if you want to flip on the columns (fractions get clustered)</li>
+<li><strong>method</strong> (<em>string</em>) &#8211; string defining the linkage type, defaults to &#8216;average&#8217; - &#8216;ward&#8217; might be a good option</li>
+<li><strong>metric</strong> (<em>string</em>) &#8211; string defining the distance metric, defaults to &#8216;euclidean&#8217;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a data ditionary. &#8216;data&#8217;, &#8216;proteins&#8217;, &#8216;fractions&#8217;, &#8216;fi&#8217;, &#8216;pi&#8217;, &#8216;topDendro&#8217;, &#8216;rightDendro&#8217; are updated</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.determineSVDResiduals">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">determineSVDResiduals</tt><big>(</big><em>origDataAlt</em>, <em>err</em>, <em>testNumber=100</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#determineSVDResiduals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.determineSVDResiduals" title="Permalink to this definition">¶</a></dt>
+<dd><p>determineSVDResiduals calculates the distribution of residuals for each compoents on either
+the Null (scrambled) or Alt(real, resampled from error values) datasets</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>origDataAlt</strong> (<em>dict, must contain &#8216;data&#8217;, &#8216;proteins&#8217;, &#8216;fractions&#8217;</em>) &#8211; a data dictionary with the dataset to be analyzed</li>
+<li><strong>err</strong> (<em>dict, must contain &#8216;data&#8217;, &#8216;proteins&#8217;, &#8216;fractions&#8217;</em>) &#8211; a data dictionary with the error values to be analyzed, must be standard deviations</li>
+<li><strong>testNumber</strong> (<em>int</em>) &#8211; an integer of the number of times to run the test to build the distribution</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list bearing
+the mean array for the Alt hypothesis at each components (length is number of fractions),
+the std array for the Alt hypothes,
+the mean array for the Null hypothesis,
+the std array for the Null hypothes,</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.doSwap">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">doSwap</tt><big>(</big><em>r</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#doSwap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.doSwap" title="Permalink to this definition">¶</a></dt>
+<dd><p>doSwap is a helper function that randomly swaps two elements in a row</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>r</strong> (<em>list</em>) &#8211; a row</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a list with two elements randomly swapped</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.drawSprings">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">drawSprings</tt><big>(</big><em>corrMatrix</em>, <em>kclusters</em>, <em>initialPosFileName</em>, <em>mult=1.1</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#drawSprings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.drawSprings" title="Permalink to this definition">¶</a></dt>
+<dd><p>drawSprings draws two figures, one of the spring evolution at 9 timepoints, one of the initial vs. final.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>corrMatrix</strong> (<em>dict - must have &#8216;data&#8217; and &#8216;proteins&#8217;</em>) &#8211; a data object generated by kmeans cluster - has the correlations between objects.</li>
+<li><strong>kclusters</strong> (<em>int</em>) &#8211; the number of kclusters used in the analysis (what was passed to kmeans)</li>
+<li><strong>initialPosFileName</strong> (<em>string</em>) &#8211; a string pointing to the initial positions of each node - see nierhausPositions.txt</li>
+<li><strong>mult</strong> (<em>float</em>) &#8211; a float of the base of the exponent to exapand on in each spring interation</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">an array of figures - first is the evolution, second is the start and end.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.fillMeanStdArray">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">fillMeanStdArray</tt><big>(</big><em>residHash</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#fillMeanStdArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.fillMeanStdArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>fillMeanStdArray is a helper function that takes a hash with lists of residuals and returns
+lists with the mean or std deviation in those lists (keeps the returned lists ordered by
+number of components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>residHash</strong> &#8211; a dict with keys as number of components, values as lists of observed resids</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">two lists bearing
+the mean of the residuals (sorted by number of components used
+the std of the residuals (sorted by number of components used</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.iterateKMeansCluster">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">iterateKMeansCluster</tt><big>(</big><em>origData</em>, <em>errData</em>, <em>kClusters</em>, <em>kMeansTests</em>, <em>kMeansRuns</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#iterateKMeansCluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.iterateKMeansCluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>iterateKMeansCluster performs k means clustering on a dataset multiple times,
+resmapling the dataset from teh distribution defined by errData each time.
+It clusters the data into kClusters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>origData</strong> (<em>dict</em>) &#8211; a data object (must contain fields &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;)</li>
+<li><strong>errData</strong> (<em>dict</em>) &#8211; a data object (must contain field &#8216;data&#8217;) and be in teh same orientation
+as the origData object</li>
+<li><strong>kClusters</strong> (<em>int</em>) &#8211; the number of centroids to generate</li>
+<li><strong>kMeansTests</strong> (<em>int</em>) &#8211; the number of iterations to try k means clustering with (in each round</li>
+<li><strong>kMeansRuns</strong> (<em>int</em>) &#8211; the number of resampling runs do to</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">an array of dictionaries, each row is 1 run of kMeansCluster
+each dictionary has a &#8216;protColorIndex&#8217; field that lists the group that protein was in
+and a &#8216;cents&#8217; field that gives the profile for that centroid</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.kMeansCluster">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">kMeansCluster</tt><big>(</big><em>x</em>, <em>k</em>, <em>trials</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#kMeansCluster"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.kMeansCluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>kMeansCluster performs k means clustering on a dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>dict</em>) &#8211; a data object (must contain field &#8216;data&#8217;)</li>
+<li><strong>k</strong> (<em>int</em>) &#8211; the number of centroids to cluster to</li>
+<li><strong>trials</strong> (<em>int</em>) &#8211; the number of times to run kmeans2 (will be run with both &#8216;random&#8217;
+and &#8216;points&#8217;. The best of the two trials will be used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a dictionary with keys idx and cents.
+idx is the group number for each protein (in the orde given in the x data object
+cents is a list of rowVectors with the centroids for each cluster</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.makeKMeansCorrelationMatrix">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">makeKMeansCorrelationMatrix</tt><big>(</big><em>allKmRuns</em>, <em>clusteredData</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#makeKMeansCorrelationMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.makeKMeansCorrelationMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>makeKMeansCorrelationMatrix builds a correlation matrix data object using the groupings given in allKmRuns
+each entry is the number of times element i and j were in the same cluster (i.e. each row vector of allKmRuns
+that has protein i and protein j in the same group increments the returned matrix[i][j] by one</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>allKmRuns</strong> (<em>dict</em>) &#8211; a 2D matrix</li>
+<li><strong>origData</strong> (<em>2D datamatrix</em>) &#8211; a 2D datamatrix to be resampled</li>
+<li><strong>err</strong> (<em>2D datamatrix</em>) &#8211; a 2D datamatrix to be resampled from - should bear standard deviations</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a data object that is a copy of clusteredData with the following changes,
+&#8216;fractions&#8217; has the &#8216;proteins&#8217; of clusteredData
+&#8216;data&#8217; has the number of times that two proteins co-grouped based on the allKmRuns data input</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.readDataFile">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">readDataFile</tt><big>(</big><em>filename</em>, <em>scale=1.0</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#readDataFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.readDataFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>readDataFile reads a datafile. The datafile should be tab separated and have both column and row headers listing the proteins/fractions.
+Empty values should be empty, they will be treated as np.NAN - see lambda below
+readDataFile takes an optional scale that will multiply the data by the specified factor - useful for &#8220;scaling&#8221; error</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; a string of the filename to be read</li>
+<li><strong>scale</strong> (<em>float</em>) &#8211; a float indicating how to scale the data, default is unscaled (1)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a data ditionary. &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217; are filled in, others are None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.reconstructWithSVD">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">reconstructWithSVD</tt><big>(</big><em>data</em>, <em>U</em>, <em>Sig</em>, <em>Vh</em>, <em>comps</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#reconstructWithSVD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.reconstructWithSVD" title="Permalink to this definition">¶</a></dt>
+<dd><p>reconstructs a dataset from a SVD using a set number of components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>int</em>) &#8211; the 2D matrix to be reconstructed</li>
+<li><strong>U</strong> &#8211; the 2D matrix U</li>
+<li><strong>Sig</strong> &#8211; the 2D matrix Sig</li>
+<li><strong>Vh</strong> &#8211; the 2D matrix Vh</li>
+<li><strong>comp</strong> &#8211; the integer number of components to reconstruct with</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">array bearing the reconstructed data, the residual data,
+and a float with the sum of the residual in that order</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.resampleRandFracs">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">resampleRandFracs</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#resampleRandFracs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.resampleRandFracs" title="Permalink to this definition">¶</a></dt>
+<dd><p>resampleRandFracs is a helper function that generates a randomzied (Null hypothesis)
+dataset by randomly swapping elements of each row</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> (<em>2D datamatrix</em>) &#8211; a 2D datamatrix to be randomized</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a randomized 2D datamatrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.resampleUsingErr">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">resampleUsingErr</tt><big>(</big><em>data</em>, <em>err</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#resampleUsingErr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.resampleUsingErr" title="Permalink to this definition">¶</a></dt>
+<dd><p>resampleUsingErr is a helper function that resamples a dataset using an error
+matrix dataset in the SAME orientation, error should be in standard deviations</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> &#8211; a 2D datamatrix to be resampled</li>
+<li><strong>err</strong> &#8211; a 2D datamatrix to be resampled from - should bear standard deviations</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a resampled 2D datamatrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="qMSClustering.transformData">
+<tt class="descclassname">qMSClustering.</tt><tt class="descname">transformData</tt><big>(</big><em>x</em>, <em>y</em>, <em>rowMethod</em>, <em>columnMethod</em><big>)</big><a class="reference internal" href="_modules/qMSClustering.html#transformData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#qMSClustering.transformData" title="Permalink to this definition">¶</a></dt>
+<dd><p>transformData transforms an object x according to indicies in object y; used to sort different datasets by the same protein/fraction indicies</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>dict, must contain &#8216;data&#8217;</em>) &#8211; a data dictionary - the one to be transformed</li>
+<li><strong>y</strong> (<em>dict, must contain &#8216;data&#8217;, &#8216;fi&#8217;, &#8216;pi&#8217;</em>) &#8211; a data dictionary - the one containing the flipping indices</li>
+<li><strong>rowMethod</strong> (<em>bool</em>) &#8211; a boolean asking if you want to flip on the rows (proteins get sorted appropriately)</li>
+<li><strong>columnMethod</strong> (<em>bool</em>) &#8211; a boolean asking if you want to flip on the columns (fractions get sorted appropriately)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a data ditionary. All fields(except &#8216;data&#8217;) in x are replaced by those in y, the data is transformed appropriately</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+	<li><a href="contents.html">documentation </a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joey Davis.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

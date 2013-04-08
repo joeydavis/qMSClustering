@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jhdavisVizLib &mdash; qMSClustering 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="qMSClustering 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="qMSClustering"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jhdavisVizLib</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pylab</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">mpl</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="kn">as</span> <span class="nn">sl</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">as</span> <span class="nn">sch</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">as</span> <span class="nn">ssd</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.vq</span> <span class="kn">as</span> <span class="nn">scv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib.mlab</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="kn">as</span> <span class="nn">npla</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">getopt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">proj3d</span>
+<span class="kn">from</span> <span class="nn">qMSClustering</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="findIndices"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.findIndices">[docs]</a><span class="k">def</span> <span class="nf">findIndices</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;findIndices is a  helper function that likely should be deleted</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">change</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">hold</span> <span class="o">=</span> <span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">change</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">change</span>
+</div>
+<div class="viewcode-block" id="mapGroups"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.mapGroups">[docs]</a><span class="k">def</span> <span class="nf">mapGroups</span><span class="p">(</span><span class="n">groupList</span><span class="p">,</span> <span class="n">letters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;mapGroups is a  helper function that maps groups numbers to letters - likely should be deleted</span>
+
+<span class="sd">    :param groupList: a list to be mapped</span>
+<span class="sd">    :type d: list</span>
+<span class="sd">    :param letters: a list to be mapped onto</span>
+<span class="sd">    :type letters: list</span>
+<span class="sd">    :returns: a list with elements of groupList mapped onto the letters</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">changeList</span> <span class="o">=</span> <span class="n">findIndices</span><span class="p">(</span><span class="n">groupList</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">changeList</span><span class="p">:</span>
+        <span class="n">toReplace</span> <span class="o">=</span> <span class="n">groupList</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">groupList</span> <span class="o">=</span> <span class="n">listReplace</span><span class="p">(</span><span class="n">groupList</span><span class="p">,</span> <span class="n">toReplace</span><span class="p">,</span> <span class="n">letters</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">groupList</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="listReplace"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.listReplace">[docs]</a><span class="k">def</span> <span class="nf">listReplace</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">to</span><span class="p">,</span> <span class="n">rv</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;listReplace is a helper function replaces all occurances of to with rv in a list l</span>
+
+<span class="sd">    :param l: list to be replaced</span>
+<span class="sd">    :type l: list</span>
+<span class="sd">    :param to: item to be replaced</span>
+<span class="sd">    :type to: string</span>
+<span class="sd">    :param rv: item to replace with</span>
+<span class="sd">    :type rv: string</span>
+<span class="sd">    :returns: a list with all occurances of to replaced with rv</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">to</span><span class="p">:</span>
+            <span class="n">tr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tr</span>
+</div>
+<div class="viewcode-block" id="printSortedDict"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.printSortedDict">[docs]</a><span class="k">def</span> <span class="nf">printSortedDict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;printSortedDict is a helper function to print a dictionary</span>
+
+<span class="sd">    :param d: a dictionary to be printed</span>
+<span class="sd">    :type d: dict</span>
+<span class="sd">    :returns: a string of the dictionary</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">k</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    <span class="n">tp</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+        <span class="n">tp</span> <span class="o">=</span> <span class="n">tp</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span> <span class="o">+</span> <span class="s">&quot;, &quot;</span>
+    <span class="k">return</span> <span class="n">tp</span>
+</div>
+<div class="viewcode-block" id="performAllReconstructions"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.performAllReconstructions">[docs]</a><span class="k">def</span> <span class="nf">performAllReconstructions</span><span class="p">(</span><span class="n">xdat</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;performs all possible reconstructions of the dataset that has been factored by SVD</span>
+
+<span class="sd">    :param xdata: the data object to be reconstructed/analyzed</span>
+<span class="sd">    :type data: dictionary, must contain &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;</span>
+<span class="sd">    :param U: the 2D matrix U</span>
+<span class="sd">    :type U: 2D matrix</span>
+<span class="sd">    :param Sig: the 2D matrix Sig</span>
+<span class="sd">    :type Sig: 2D matrix</span>
+<span class="sd">    :param Vh: the 2D matrix Vh</span>
+<span class="sd">    :type Vh: 2D matrix</span>
+<span class="sd">    :param colors: the colormap to be used in tieh figure</span>
+<span class="sd">    :type colors: colormap</span>
+<span class="sd">    :param figure: whether to display the figures</span>
+<span class="sd">    :type figure: boolean</span>
+<span class="sd">    :returns:  array bearing the calculated residual for each additional component</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clusteredData</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">fractions</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span>
+    <span class="n">proteins</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span>
+    <span class="n">ydat</span> <span class="o">=</span> <span class="n">xdat</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">zdat</span> <span class="o">=</span> <span class="n">xdat</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">residualsByComp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fractions</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">recon</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">totalResid</span> <span class="o">=</span> <span class="n">reconstructWithSVD</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">ydat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">recon</span>
+        <span class="n">zdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resid</span>
+        <span class="n">residualsByComp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">totalResid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">figure</span><span class="p">:</span>
+            <span class="n">drawThreePanelHeatMap</span><span class="p">(</span><span class="n">xdat</span><span class="p">,</span> <span class="n">ydat</span><span class="p">,</span> <span class="n">zdat</span><span class="p">,</span> <span class="n">n1</span><span class="o">=</span><span class="s">&quot;originalData&quot;</span><span class="p">,</span> <span class="n">n2</span><span class="o">=</span><span class="s">&quot;recon_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s">&quot;_comp&quot;</span><span class="p">,</span> <span class="n">n3</span><span class="o">=</span><span class="s">&quot;resid&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">figure</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="c">##Draw heatmap</span>
+        <span class="n">axData</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+        <span class="n">axData</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">residualsByComp</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">residualsByComp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">residualsByComp</span>
+</div>
+<div class="viewcode-block" id="plotComponents"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.plotComponents">[docs]</a><span class="k">def</span> <span class="nf">plotComponents</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">comps</span><span class="p">,</span> <span class="n">proteins</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;plots the specified number of components in a new figure</span>
+
+<span class="sd">    :param U: the U matrix from the SVD</span>
+<span class="sd">    :type data: 2D matrix from SVD</span>
+<span class="sd">    :param comps: the number of components to plot</span>
+<span class="sd">    :type comps: int</span>
+<span class="sd">    :param proteins: the protein names, if none will just list numbers</span>
+<span class="sd">    :type proteins: list</span>
+<span class="sd">    :returns:  and figure with the ploted heat map</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">toPlot</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">toPlot</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="mi">0</span><span class="p">:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">comps</span><span class="p">]</span>
+    <span class="n">toPlot</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">comps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">proteins</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">toPlot</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">toPlot</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">proteins</span>
+
+    <span class="k">return</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">toPlot</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;components&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="drawThreePanelHeatMap"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawThreePanelHeatMap">[docs]</a><span class="k">def</span> <span class="nf">drawThreePanelHeatMap</span><span class="p">(</span><span class="n">xdat</span><span class="p">,</span> <span class="n">ydat</span><span class="p">,</span> <span class="n">zdat</span><span class="p">,</span> <span class="n">n1</span><span class="o">=</span><span class="s">&quot;dat1&quot;</span><span class="p">,</span> <span class="n">n2</span><span class="o">=</span><span class="s">&quot;dat2&quot;</span><span class="p">,</span> <span class="n">n3</span><span class="o">=</span><span class="s">&quot;dat3&quot;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;draws a figure with 3 heatmap panels</span>
+
+<span class="sd">    :param xdat: first panel data object</span>
+<span class="sd">    :type xdat: dictionary, must contain &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;</span>
+<span class="sd">    :param ydat: first panel data object</span>
+<span class="sd">    :type ydat: dictionary, must contain &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;</span>
+<span class="sd">    :param zdat: first panel data object</span>
+<span class="sd">    :type zdat: dictionary, must contain &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;</span>
+<span class="sd">    :param n1: name of panel 1</span>
+<span class="sd">    :type n1: string</span>
+<span class="sd">    :param n2: name of panel 2</span>
+<span class="sd">    :type n2: string</span>
+<span class="sd">    :param n3: name of panel 3</span>
+<span class="sd">    :type n3: string</span>
+<span class="sd">    :param colors: the colormap to be used in tieh figure</span>
+<span class="sd">    :type colors: colormap</span>
+<span class="sd">    :returns:  array bearing the calculated residual for each additional component</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">data2</span> <span class="o">=</span> <span class="n">ydat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">data3</span> <span class="o">=</span> <span class="n">zdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        
+    <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.925</span><span class="p">,</span> <span class="n">n1</span><span class="p">)</span>
+    <span class="c">##Draw heatmap</span>
+    <span class="n">f1Data</span> <span class="o">=</span> <span class="n">heatMapAxes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="n">fractions</span><span class="o">=</span><span class="n">xdat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">],</span> <span class="n">proteins</span><span class="o">=</span><span class="n">xdat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">],</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
+    <span class="c">##Draw colorbar</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">f1Data</span><span class="p">)</span>
+    
+    <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.925</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span>
+    <span class="c">##Draw heatmap</span>
+    <span class="n">f2Data</span> <span class="o">=</span> <span class="n">heatMapAxes</span><span class="p">(</span><span class="n">data2</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.375</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="n">fractions</span><span class="o">=</span><span class="n">ydat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">],</span> <span class="n">proteins</span><span class="o">=</span><span class="n">ydat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">],</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
+    <span class="c">##Draw colorbar</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">f2Data</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.925</span><span class="p">,</span> <span class="n">n3</span><span class="p">)</span>
+    <span class="c">##Draw heatmap</span>
+    <span class="n">f3Data</span> <span class="o">=</span> <span class="n">heatMapAxes</span><span class="p">(</span><span class="n">data3</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span> <span class="n">fractions</span><span class="o">=</span><span class="n">zdat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">],</span> <span class="n">proteins</span><span class="o">=</span><span class="n">zdat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">],</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
+    <span class="c">##Draw colorbar</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">f3Data</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="drawResidDist"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawResidDist">[docs]</a><span class="k">def</span> <span class="nf">drawResidDist</span><span class="p">(</span><span class="n">toDisplay</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="c"># the histogram of the data</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">patches</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">toDisplay</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">toDisplay</span><span class="p">)</span><span class="o">/</span><span class="mi">200</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s">&#39;green&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+
+    <span class="n">bincenters</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c"># add a &#39;best fit&#39; line for the normal PDF</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">mlab</span><span class="o">.</span><span class="n">normpdf</span><span class="p">(</span> <span class="n">bincenters</span><span class="p">,</span> <span class="n">toDisplay</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">toDisplay</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bincenters</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="s">&#39;r--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">&#39;Residual&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">&#39;Fraction&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&#39;Dist of &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&#39; comps residulas: mu = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">toDisplay</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="o">+</span> <span class="s">&#39; std = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">toDisplay</span><span class="o">.</span><span class="n">std</span><span class="p">()))</span>
+
+<span class="c">########################</span></div>
+<div class="viewcode-block" id="drawHeatMap"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawHeatMap">[docs]</a><span class="k">def</span> <span class="nf">drawHeatMap</span><span class="p">(</span><span class="n">xdat</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;unnamed&quot;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">,</span> <span class="n">dendro</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">km</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;drawHeatMap produces a colored heatmap in a new figure window</span>
+
+<span class="sd">    :param xdat: a data object (must contain fields &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;)</span>
+<span class="sd">    :type xdat: dict</span>
+<span class="sd">    :param colors: a color scale (a cmap)</span>
+<span class="sd">    :type colors: cmap</span>
+<span class="sd">    :param name: figure name and title</span>
+<span class="sd">    :type name: str.</span>
+<span class="sd">    :param dendro: a boolean to draw the dendrogram on the left</span>
+<span class="sd">    :type dendro: bool.</span>
+<span class="sd">    :param protColors: a color map used to label the protein names with group colors</span>
+<span class="sd">    :type protColors: cmap</span>
+<span class="sd">    :param cIndex: a list of groupIds for the proteins</span>
+<span class="sd">    :type cIndex: list</span>
+<span class="sd">    :param km: if present, will draw the kmeans cluster profiles at the top of the figure- input is a 2d-matrix - rowVectors for each centroid, each column is a fraction</span>
+<span class="sd">    :type km: matrix</span>
+<span class="sd">    :returns:  int -- the return code.</span>
+<span class="sd">    :raises: AttributeError, KeyError</span>
+<span class="sd">    :returns: a figure object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">fractions</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span>
+    <span class="n">proteins</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="c">##Draw heatmap</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="k">if</span> <span class="n">dendro</span><span class="p">:</span>
+        <span class="n">xStart</span> <span class="o">=</span> <span class="mf">0.35</span>
+        <span class="n">xLength</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xStart</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="n">xLength</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="k">if</span> <span class="n">km</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">yStart</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="n">yLength</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">yStart</span> <span class="o">=</span> <span class="mf">0.1</span>
+        <span class="n">yLength</span> <span class="o">=</span> <span class="mf">0.7</span>
+    <span class="n">figData</span> <span class="o">=</span> <span class="n">heatMapAxes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">xStart</span><span class="p">,</span> <span class="n">yStart</span><span class="p">,</span> <span class="n">xLength</span><span class="p">,</span> <span class="n">yLength</span><span class="p">],</span> <span class="n">fractions</span><span class="o">=</span><span class="n">fractions</span><span class="p">,</span> <span class="n">proteins</span><span class="o">=</span><span class="n">proteins</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="n">protColors</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="n">cIndex</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
+    <span class="c">##Draw colorbar</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">figData</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dendro</span><span class="p">:</span>
+        <span class="n">ax2Data</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">xLength</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">yLength</span><span class="p">])</span>
+        <span class="n">sch</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">xdat</span><span class="p">[</span><span class="s">&#39;rightDendro&#39;</span><span class="p">],</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="n">color_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">ax2Data</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+        <span class="n">ax2Data</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">km</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">small</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">big</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">small</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">big</span><span class="p">):</span>
+            <span class="n">big</span> <span class="o">=</span> <span class="mi">0</span><span class="o">-</span><span class="n">small</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">small</span> <span class="o">=</span> <span class="mi">0</span><span class="o">-</span><span class="n">big</span>
+        <span class="n">ax3Data</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">xStart</span><span class="p">,</span> <span class="n">yLength</span><span class="o">+</span><span class="n">offset</span><span class="p">,</span> <span class="n">xLength</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+        <span class="n">ax3Data</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">km</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">small</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">big</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">km</span><span class="p">)):</span>
+            <span class="n">ax3Data</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;clus&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&quot;right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cIndex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">protColors</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">ax3Data</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+        <span class="n">ax3Data</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="heatMapAxes"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.heatMapAxes">[docs]</a><span class="k">def</span> <span class="nf">heatMapAxes</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="n">colors</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">,</span> <span class="n">fractions</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">proteins</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;heatMapAxes draws a heatmap</span>
+
+<span class="sd">    :param data: a datamatrix to draw</span>
+<span class="sd">    :type xdat: a 2D Matrix</span>
+<span class="sd">    :param dims: the size of the plot to draw - defaults to full window</span>
+<span class="sd">    :type dims: list (4 elements)</span>
+<span class="sd">    :param colors: color index to use - defaults to redblue</span>
+<span class="sd">    :type colors: cmap</span>
+<span class="sd">    :param fractions: fraction names</span>
+<span class="sd">    :type fractions: list</span>
+<span class="sd">    :param proteins: protein names</span>
+<span class="sd">    :type proteins: list</span>
+<span class="sd">    :param protColors: a color map used to label the protein names with group colors</span>
+<span class="sd">    :type protColors: cmap</span>
+<span class="sd">    :param cIndex: a list of groupIds for the proteins</span>
+<span class="sd">    :type cIndex: list</span>
+<span class="sd">    :param fig: where to plot the axes (which figure); defaults to new figure</span>
+<span class="sd">    :type fig: matplotlib figure</span>
+<span class="sd">    :returns:  an axes</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">axData</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fractions</span><span class="p">)):</span>
+        <span class="n">axData</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span> <span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;top&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">protColors</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">proteins</span><span class="p">)):</span>
+            <span class="n">axData</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;  &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">proteins</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&quot;right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">proteins</span><span class="p">)):</span>
+            <span class="n">axData</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;  &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">proteins</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&quot;right&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">cIndex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">protColors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">protColors</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">small</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">big</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">small</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">big</span><span class="p">):</span>
+        <span class="n">big</span> <span class="o">=</span> <span class="mi">0</span><span class="o">-</span><span class="n">small</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">small</span> <span class="o">=</span> <span class="mi">0</span><span class="o">-</span><span class="n">big</span>
+    <span class="n">figData</span> <span class="o">=</span> <span class="n">axData</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">small</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">big</span><span class="p">)</span>
+    <span class="c">#fig.colorbar(figData)</span>
+    <span class="n">axData</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">axData</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+
+    <span class="k">return</span> <span class="n">figData</span>
+</div>
+<div class="viewcode-block" id="drawProfiles"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawProfiles">[docs]</a><span class="k">def</span> <span class="nf">drawProfiles</span><span class="p">(</span><span class="n">km</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s">&#39;hsv&#39;</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;drawProfiles draws a scater plot of the given row vectors (points evenly spaced)</span>
+<span class="sd">    the points are shaded along the given cmap by position in the array of arrays (km)</span>
+
+<span class="sd">    :param km: a 2D array where each row vector is a separate profile to plte</span>
+<span class="sd">    :type km: 2D Matrix</span>
+<span class="sd">    :param cIndex: a color map, each row will take a differnt (equally spaced) color from the cmap</span>
+<span class="sd">    :type km: cmap</span>
+<span class="sd">    :returns: a handle to the resulting figure</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">asdf</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+    <span class="n">elements</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">km</span><span class="p">)</span>
+    <span class="n">plots</span> <span class="o">=</span> <span class="p">[</span><span class="n">asdf</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">km</span><span class="p">[</span><span class="n">i</span><span class="p">])),</span> <span class="n">km</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">cIndex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">elements</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">elements</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="drawSVDResidualPlot"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawSVDResidualPlot">[docs]</a><span class="k">def</span> <span class="nf">drawSVDResidualPlot</span><span class="p">(</span><span class="n">meanAltArray</span><span class="p">,</span> <span class="n">stdAltArray</span><span class="p">,</span> <span class="n">meanNullArray</span><span class="p">,</span> <span class="n">stdNullArray</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;drawSVDResidualPlot draws a scater plot with the mean alternate hypothesis and mean null hypothesis.</span>
+<span class="sd">    the plots are shadded by the desired number of sigmas. a blue dot shows the difference between the two means</span>
+
+<span class="sd">    :param meanAltArray: a list of alternate hypothesis mean values</span>
+<span class="sd">    :type meanAltArray: list (length of number of components)</span>
+<span class="sd">    :param stdAltArray: a list of alternate hypothesis std values</span>
+<span class="sd">    :type stdAltArray: list (length of number of components)</span>
+<span class="sd">    :param meanNullArray: a list of null hypothesis mean values</span>
+<span class="sd">    :type meanNullArray: list (length of number of components)</span>
+<span class="sd">    :param stdNullArray: a list of null hypothesis std values</span>
+<span class="sd">    :type stdNullArray: list (length of number of components)</span>
+<span class="sd">    :param sigmas: number of sigmas to plot</span>
+<span class="sd">    :type sigmas: int</span>
+<span class="sd">    :param fig: a figure handle to draw in</span>
+<span class="sd">    :type fig: matplotlib figure, defaults to new figure</span>
+<span class="sd">    :returns: a handle to the resulting figure</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">axData</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">])</span>
+    <span class="n">it</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">it</span> <span class="o">&lt;=</span> <span class="n">sigmas</span><span class="p">:</span>
+        <span class="n">axData</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">meanNullArray</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">meanNullArray</span><span class="o">-</span><span class="n">stdNullArray</span><span class="o">*</span><span class="n">it</span><span class="p">,</span> <span class="n">meanNullArray</span><span class="o">+</span><span class="n">stdNullArray</span><span class="o">*</span><span class="n">it</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">sigmas</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;red&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">axData</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">meanAltArray</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">meanAltArray</span><span class="o">-</span><span class="n">stdAltArray</span><span class="o">*</span><span class="n">it</span><span class="p">,</span> <span class="n">meanAltArray</span><span class="o">+</span><span class="n">stdAltArray</span><span class="o">*</span><span class="n">it</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">sigmas</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;green&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">it</span><span class="o">+</span><span class="mi">1</span>
+    
+    <span class="n">axData</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">meanNullArray</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">meanNullArray</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">)</span>
+    <span class="n">axData</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">meanAltArray</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">meanAltArray</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;black&#39;</span><span class="p">)</span>
+    <span class="n">axData</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">meanAltArray</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">meanNullArray</span><span class="o">-</span><span class="n">meanAltArray</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fig</span>
+</div>
+<div class="viewcode-block" id="drawKmClusteredData"><a class="viewcode-back" href="../jhdavisVizLib.html#jhdavisVizLib.drawKmClusteredData">[docs]</a><span class="k">def</span> <span class="nf">drawKmClusteredData</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">kClusters</span><span class="p">,</span> <span class="n">finalPIndex</span><span class="p">,</span> <span class="n">colorIndex</span><span class="p">,</span> <span class="n">finalCents</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;drawKmClusteredData draws a heatmap of the clusteredData with the centroid above</span>
+
+<span class="sd">    :param clusteredData: a data object (must contain fields &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;)</span>
+<span class="sd">    :type clusteredData: dict</span>
+<span class="sd">    :param kClusters: number of centroids</span>
+<span class="sd">    :type kClusters: int</span>
+<span class="sd">    :param finalPIndex: a list of the centroids each protein is in (sorted same as clusteredData[&#39;proteins&#39;]</span>
+<span class="sd">    :type finalPIndex: 2D datamatrix</span>
+<span class="sd">    :param colorIndex: a list of the centroids each protein is in (sorted same as clusteredData[&#39;proteins&#39;]</span>
+<span class="sd">    :typecolorIndexd: 2D datamatrix</span>
+<span class="sd">    :param finalPIndex: a list of the centroids each protein is in (sorted same as clusteredData[&#39;proteins&#39;]</span>
+<span class="sd">    :type d: 2D datamatrix</span>
+<span class="sd">    :returns:  a resampled 2D datamatrix</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">finalPIndex</span> <span class="o">=</span> <span class="n">allKmRuns</span><span class="p">[</span><span class="s">&#39;protColorIndex&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">finalCents</span> <span class="o">=</span> <span class="n">allKmRuns</span><span class="p">[</span><span class="s">&#39;cents&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">kmcluteredMap</span> <span class="o">=</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;KMclusteredMap_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">kClusters</span><span class="p">),</span> <span class="n">dendro</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="n">finalPIndex</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="n">colorIndex</span><span class="p">,</span> <span class="n">km</span><span class="o">=</span><span class="n">finalCents</span><span class="p">)</span>
+
+
+</div>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">def 2DProjection(xdata, axIndex1, axIndex2, byPCA, protColors=None, cIndex=None):</span>
+<span class="sd">    xdat = xdata.copy()</span>
+<span class="sd">    clusteredData = xdat[&#39;data&#39;]</span>
+<span class="sd">    fractions = xdat[&#39;fractions&#39;]</span>
+<span class="sd">    proteins = xdat[&#39;proteins&#39;]</span>
+<span class="sd">    pi = xdat[&#39;pi&#39;]</span>
+
+<span class="sd">    if byPCA:</span>
+<span class="sd">        titleString = &quot;PCA&quot;</span>
+<span class="sd">        #create PCA class with dataset</span>
+<span class="sd">        myPCA = PCA(clusteredData)</span>
+<span class="sd">        transformedData = myPCA.Y</span>
+<span class="sd">        </span>
+<span class="sd">        #determine loadings for first 2 PCs</span>
+<span class="sd">        xLoad = myPCA.Wt[axIndex1]</span>
+<span class="sd">        yLoad = myPCA.Wt[axIndex2]</span>
+<span class="sd">    else:</span>
+<span class="sd">        titleString = &quot;SVD&quot;</span>
+<span class="sd">        #perform SVD</span>
+<span class="sd">        U, Sig, Vh = SVD(clusteredData)</span>
+<span class="sd">        #????transformedData = np.array(reconstructWithSVD(clusteredData, U, Sig, Vh, 3)[0])</span>
+
+<span class="sd">        #determine loadings for first 2 comps</span>
+<span class="sd">        xLoad = Vh[axIndex1]</span>
+<span class="sd">        yLoad = Vh[axIndex2]</span>
+<span class="sd">    #transform data using first 3 PCs</span>
+<span class="sd">    x = []</span>
+<span class="sd">    y = []</span>
+<span class="sd">    dotCol = []</span>
+<span class="sd">    iterator = 0</span>
+
+<span class="sd">    for item in transformedData:</span>
+<span class="sd">        x.append(item[0])</span>
+<span class="sd">        y.append(item[1])</span>
+<span class="sd">        if cIndex is None:</span>
+<span class="sd">            dotCol.append(&#39;black&#39;)</span>
+<span class="sd">        else:</span>
+<span class="sd">            dotCol.append(cIndex(float(protColors[pi[iterator]])/(protColors.max()+1)))</span>
+<span class="sd">        iterator = iterator+1</span>
+
+<span class="sd">    #setup scores plot</span>
+<span class="sd">    fig2D = pylab.figure()</span>
+<span class="sd">    ax2D = fig2D.add_subplot(121)</span>
+<span class="sd">    ax2D.scatter(x, y, s=50, c=dotCol, marker=&#39;o&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">    #label scores plots</span>
+<span class="sd">    for pindex, prot, xl, yl, zl in zip(pi, proteins, x, y, z):</span>
+<span class="sd">        ax2D.annotate(str(prot), xy = (float(xl), float(yl)), xytext = (-15,15), textcoords = &#39;offset points&#39;, arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;))</span>
+
+<span class="sd">    #label scores axis</span>
+<span class="sd">    ax2D.set_xlabel(titleString + &quot;1&quot;) </span>
+<span class="sd">    ax2D.set_ylabel(titleString + &quot;2&quot;)</span>
+<span class="sd">    ax2D.set_title(&quot;2D projection_scores &quot; + titleString)</span>
+
+<span class="sd">    #setup loadings plot</span>
+<span class="sd">    axLoad2D = fig2D.add_subplot(122)</span>
+<span class="sd">    axLoad2D.scatter(xLoad, yLoad, s=50, c=&#39;red&#39;, marker=&#39;o&#39;)</span>
+<span class="sd">    #label loadings plot</span>
+<span class="sd">    for frac, xl, yl in zip(fractions, xLoad, yLoad):</span>
+<span class="sd">        axLoad2D.annotate(str(frac), xy = (float(xl), float(yl)), xytext = (-15,15), textcoords = &#39;offset points&#39;, arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;))</span>
+
+<span class="sd">    #label scores axis</span>
+<span class="sd">    axLoad2D.set_xlabel(&quot;Loadings on &quot; + titleString + &quot;1&quot;) </span>
+<span class="sd">    axLoad2D.set_ylabel(&quot;Loadings on &quot; + titleString + &quot;2&quot;)</span>
+<span class="sd">    axLoad2D.set_title(&quot;2D projection_loadings &quot; + titleString)</span>
+<span class="sd">    #center axes</span>
+<span class="sd">    axLoad2D.set_xlim([0-max(map(abs,xLoad))*1.25, max(map(abs,xLoad))*1.25])</span>
+<span class="sd">    axLoad2D.set_ylim([0-max(map(abs,yLoad))*1.25, max(map(abs,yLoad))*1.25])</span>
+
+
+
+<span class="sd">def doProjections(xdata, plt2D, plt3D, byPCA, protColors=None, cIndex=None):</span>
+<span class="sd">    xdat = xdata.copy()</span>
+<span class="sd">    clusteredData = xdat[&#39;data&#39;]</span>
+<span class="sd">    fractions = xdat[&#39;fractions&#39;]</span>
+<span class="sd">    proteins = xdat[&#39;proteins&#39;]</span>
+<span class="sd">    pi = xdat[&#39;pi&#39;]</span>
+
+<span class="sd">    if byPCA:</span>
+<span class="sd">        titleString = &quot;PCA&quot;</span>
+<span class="sd">        #create PCA class with dataset</span>
+<span class="sd">        myPCA = PCA(clusteredData)</span>
+<span class="sd">        transformedData = myPCA.Y</span>
+<span class="sd">        </span>
+<span class="sd">        #determine loadings for first 3 PCs</span>
+<span class="sd">        xLoad = myPCA.Wt[0]</span>
+<span class="sd">        yLoad = myPCA.Wt[1]</span>
+<span class="sd">        zLoad = myPCA.Wt[2]</span>
+
+<span class="sd">    else:</span>
+<span class="sd">        titleString = &quot;SVD&quot;</span>
+<span class="sd">        #perform SVD</span>
+<span class="sd">        U, Sig, Vh = SVD(clusteredData)</span>
+<span class="sd">        transformedData = np.array(reconstructWithSVD(clusteredData, U, Sig, Vh, 3)[0])</span>
+
+<span class="sd">        #determine loadings for first 3 PCs</span>
+<span class="sd">        xLoad = Vh[0]</span>
+<span class="sd">        yLoad = Vh[1]</span>
+<span class="sd">        zLoad = Vh[2]</span>
+
+<span class="sd">    #transform data using first 3 PCs</span>
+<span class="sd">    x = []</span>
+<span class="sd">    y = []</span>
+<span class="sd">    z = []</span>
+<span class="sd">    dotCol = []</span>
+<span class="sd">    iterator = 0</span>
+
+<span class="sd">    for item in transformedData:</span>
+<span class="sd">        x.append(item[0])</span>
+<span class="sd">        y.append(item[1])</span>
+<span class="sd">        z.append(item[2])</span>
+<span class="sd">        if cIndex is None:</span>
+<span class="sd">            dotCol.append(&#39;black&#39;)</span>
+<span class="sd">        else:</span>
+<span class="sd">            dotCol.append(cIndex(float(protColors[pi[iterator]])/(protColors.max()+1)))</span>
+<span class="sd">        iterator = iterator+1</span>
+
+<span class="sd">    #make 2D plots of scores and loadings</span>
+<span class="sd">    if plt2D:</span>
+<span class="sd">        #setup scores plot</span>
+<span class="sd">        fig2D = pylab.figure()</span>
+<span class="sd">        ax2D = fig2D.add_subplot(121)</span>
+<span class="sd">        ax2D.scatter(x, y, s=50, c=dotCol, marker=&#39;o&#39;)</span>
+<span class="sd">        #label scores plots</span>
+<span class="sd">        for pindex, prot, xl, yl, zl in zip(pi, proteins, x, y, z):</span>
+<span class="sd">            ax2D.annotate(str(prot), xy = (float(xl), float(yl)), xytext = (-15,15), textcoords = &#39;offset points&#39;, arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;))</span>
+
+<span class="sd">        #label scores axis</span>
+<span class="sd">        ax2D.set_xlabel(titleString + &quot;1&quot;) </span>
+<span class="sd">        ax2D.set_ylabel(titleString + &quot;2&quot;)</span>
+<span class="sd">        ax2D.set_title(&quot;2D projection_scores &quot; + titleString)</span>
+
+<span class="sd">        #setup loadings plot</span>
+<span class="sd">        axLoad2D = fig2D.add_subplot(122)</span>
+<span class="sd">        axLoad2D.scatter(xLoad, yLoad, s=50, c=&#39;red&#39;, marker=&#39;o&#39;)</span>
+<span class="sd">        #label loadings plot</span>
+<span class="sd">        for frac, xl, yl in zip(fractions, xLoad, yLoad):</span>
+<span class="sd">            axLoad2D.annotate(str(frac), xy = (float(xl), float(yl)), xytext = (-15,15), textcoords = &#39;offset points&#39;, arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;))</span>
+
+<span class="sd">        #label scores axis</span>
+<span class="sd">        axLoad2D.set_xlabel(&quot;Loadings on &quot; + titleString + &quot;1&quot;) </span>
+<span class="sd">        axLoad2D.set_ylabel(&quot;Loadings on &quot; + titleString + &quot;2&quot;)</span>
+<span class="sd">        axLoad2D.set_title(&quot;2D projection_loadings &quot; + titleString)</span>
+<span class="sd">        #center axes</span>
+<span class="sd">        axLoad2D.set_xlim([0-max(map(abs,xLoad))*1.25, max(map(abs,xLoad))*1.25])</span>
+<span class="sd">        axLoad2D.set_ylim([0-max(map(abs,yLoad))*1.25, max(map(abs,yLoad))*1.25])</span>
+
+<span class="sd">    #make 3D plots of scores and loadings</span>
+<span class="sd">    if plt3D:</span>
+<span class="sd">        #setup scores plot</span>
+<span class="sd">        fig3d = pylab.figure()</span>
+<span class="sd">        ax3d = Axes3D(fig3d)</span>
+<span class="sd">        </span>
+<span class="sd">        ax3d.scatter(x, y, z, c=dotCol, s=100)</span>
+<span class="sd">    </span>
+<span class="sd">        xAxisLine = ((min(x), max(x)), (0,0), (0,0))</span>
+<span class="sd">        ax3d.plot(xAxisLine[0], xAxisLine[1], xAxisLine[2], &#39;r&#39;) # make a red line for the x-axis.</span>
+<span class="sd">        yAxisLine = ((0, 0), (min(y), max(y)), (0,0)) # 2 points make the y-axis line at the data extrema along y-axis</span>
+<span class="sd">        ax3d.plot(yAxisLine[0], yAxisLine[1], yAxisLine[2], &#39;r&#39;) # make a red line for the y-axis.</span>
+<span class="sd">        zAxisLine = ((0, 0), (0,0), (min(z), max(z))) # 2 points make the z-axis line at the data extrema along z-axis</span>
+<span class="sd">        ax3d.plot(zAxisLine[0], zAxisLine[1], zAxisLine[2], &#39;r&#39;) # make a red line for the z-axis.</span>
+
+<span class="sd">        #label scores plots and update with moves</span>
+<span class="sd">        labels = []</span>
+<span class="sd">        def define_position(e):</span>
+<span class="sd">            for pindex, prot, x1, y1, z1 in zip(pi, proteins, x, y, z):</span>
+<span class="sd">                x2, y2, _ = proj3d.proj_transform(x1, y1, z1, ax3d.get_proj())</span>
+<span class="sd">                labels.append([pylab.annotate(</span>
+<span class="sd">                    prot, </span>
+<span class="sd">                    xy = (x2, y2), xytext = (10, 10),</span>
+<span class="sd">                    textcoords = &#39;offset points&#39;, color = cIndex(float(protColors[pindex])/(protColors.max()+1)),</span>
+<span class="sd">                    arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;)), prot, x1, y1, z1])</span>
+<span class="sd">            fig3d.canvas.draw()</span>
+<span class="sd">        </span>
+<span class="sd">        def update_position(e):</span>
+<span class="sd">            if len(labels)!=0:</span>
+<span class="sd">                for label in labels:</span>
+<span class="sd">                    x2, y2, _ = proj3d.proj_transform(label[2], label[3], label[4], ax3d.get_proj())</span>
+<span class="sd">                    label[0].xy = x2,y2</span>
+<span class="sd">                    label[0].update_positions(fig3d.canvas.renderer)</span>
+<span class="sd">                fig3d.canvas.draw()</span>
+
+<span class="sd">        </span>
+<span class="sd">        fig3d.canvas.mpl_connect(&#39;scroll_event&#39;, define_position)</span>
+<span class="sd">        fig3d.canvas.mpl_connect(&#39;button_release_event&#39;, update_position)</span>
+
+<span class="sd">        #labels scores axis</span>
+<span class="sd">        ax3d.set_xlabel(titleString + &quot;1&quot;) </span>
+<span class="sd">        ax3d.set_ylabel(titleString + &quot;2&quot;)</span>
+<span class="sd">        ax3d.set_zlabel(titleString + &quot;3&quot;)</span>
+<span class="sd">        ax3d.set_title(&quot;3D &quot; + titleString + &quot; projection_scores&quot;)</span>
+<span class="sd">        </span>
+<span class="sd">        #setup loadings plot</span>
+<span class="sd">        fig3DLoad = pylab.figure()</span>
+<span class="sd">        ax3DLoad = Axes3D(fig3DLoad)</span>
+<span class="sd">        </span>
+<span class="sd">        ax3DLoad.scatter(xLoad, yLoad, zLoad, &#39;bo&#39;, s=100)</span>
+<span class="sd">    </span>
+<span class="sd">        xAxisLine = ((min(xLoad), max(xLoad)), (0,0), (0,0))</span>
+<span class="sd">        ax3DLoad.plot(xAxisLine[0], xAxisLine[1], xAxisLine[2], &#39;r&#39;) # make a red line for the x-axis.</span>
+<span class="sd">        yAxisLine = ((0, 0), (min(yLoad), max(yLoad)), (0,0)) # 2 points make the y-axis line at the data extrema along y-axis</span>
+<span class="sd">        ax3DLoad.plot(yAxisLine[0], yAxisLine[1], yAxisLine[2], &#39;r&#39;) # make a red line for the y-axis.</span>
+<span class="sd">        zAxisLine = ((0, 0), (0,0), (min(zLoad), max(zLoad))) # 2 points make the z-axis line at the data extrema along z-axis</span>
+<span class="sd">        ax3DLoad.plot(zAxisLine[0], zAxisLine[1], zAxisLine[2], &#39;r&#39;) # make a red line for the z-axis.</span>
+
+<span class="sd">        #labels scores axis</span>
+<span class="sd">        ax3DLoad.set_xlabel(titleString + &quot;1&quot;) </span>
+<span class="sd">        ax3DLoad.set_ylabel(titleString + &quot;2&quot;)</span>
+<span class="sd">        ax3DLoad.set_zlabel(titleString + &quot;3&quot;)</span>
+<span class="sd">        ax3DLoad.set_title(&quot;3D &quot; + titleString + &quot; projection_Loadings&quot;)</span>
+
+<span class="sd">        #label loadings plots and update with moves</span>
+<span class="sd">        labelsLoad = []</span>
+<span class="sd">        def define_position(e):</span>
+<span class="sd">            for frac, x1, y1, z1 in zip(fractions, xLoad, yLoad, zLoad):</span>
+<span class="sd">                x2, y2, _ = proj3d.proj_transform(x1, y1, z1, ax3DLoad.get_proj())</span>
+<span class="sd">                labelsLoad.append([pylab.annotate(</span>
+<span class="sd">                    frac, </span>
+<span class="sd">                    xy = (x2, y2), xytext = (10, 10),</span>
+<span class="sd">                    textcoords = &#39;offset points&#39;,</span>
+<span class="sd">                    arrowprops = dict(arrowstyle = &#39;-&gt;&#39;, connectionstyle = &#39;arc3,rad=0&#39;)), frac, x1, y1, z1])</span>
+<span class="sd">            fig3DLoad.canvas.draw()</span>
+<span class="sd">        </span>
+<span class="sd">        def update_position(e):</span>
+<span class="sd">            if len(labelsLoad)!=0:</span>
+<span class="sd">                for label in labelsLoad:</span>
+<span class="sd">                    x2, y2, _ = proj3d.proj_transform(label[2], label[3], label[4], ax3DLoad.get_proj())</span>
+<span class="sd">                    label[0].xy = x2,y2</span>
+<span class="sd">                    label[0].update_positions(fig3d.canvas.renderer)</span>
+<span class="sd">                fig3DLoad.canvas.draw()</span>
+
+<span class="sd">        </span>
+<span class="sd">        fig3DLoad.canvas.mpl_connect(&#39;scroll_event&#39;, define_position)</span>
+<span class="sd">        fig3DLoad.canvas.mpl_connect(&#39;button_release_event&#39;, update_position)</span>
+<span class="sd">&#39;&#39;&#39;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joey Davis.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

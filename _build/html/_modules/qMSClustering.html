@@ -1,0 +1,682 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>qMSClustering &mdash; qMSClustering 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="qMSClustering 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="qMSClustering"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for qMSClustering</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pylab</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="kn">as</span> <span class="nn">sl</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">as</span> <span class="nn">sch</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">as</span> <span class="nn">ssd</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.vq</span> <span class="kn">as</span> <span class="nn">scv</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="kn">as</span> <span class="nn">npla</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="kn">as</span> <span class="nn">mpc</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">matplotlib._pylab_helpers</span>
+
+<span class="kn">from</span> <span class="nn">matplotlib.mlab</span> <span class="kn">import</span> <span class="n">PCA</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">proj3d</span>
+<span class="kn">from</span> <span class="nn">jhdavisVizLib</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="kn">import</span> <span class="n">ascii_letters</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">mpl</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+
+<div class="viewcode-block" id="readDataFile"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.readDataFile">[docs]</a><span class="k">def</span> <span class="nf">readDataFile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;readDataFile reads a datafile. The datafile should be tab separated and have both column and row headers listing the proteins/fractions.</span>
+<span class="sd">    Empty values should be empty, they will be treated as np.NAN - see lambda below</span>
+<span class="sd">    readDataFile takes an optional scale that will multiply the data by the specified factor - useful for &quot;scaling&quot; error</span>
+
+<span class="sd">    :param filename: a string of the filename to be read</span>
+<span class="sd">    :type filename: string</span>
+<span class="sd">    :param scale: a float indicating how to scale the data, default is unscaled (1)</span>
+<span class="sd">    :type scale: float</span>
+<span class="sd">    :returns:  a data ditionary. &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39; are filled in, others are None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inputFile</span><span class="p">:</span>
+        <span class="n">csvFile</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">inputFile</span><span class="p">,</span> <span class="n">delimiter</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">))</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">csvFile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">proteins</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csvFile</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+        <span class="n">insertValue2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">NAN</span> <span class="k">if</span> <span class="n">x</span><span class="o">==</span><span class="s">&#39;&#39;</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">y</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">insertValue2</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csvFile</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
+        <span class="n">inputFile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;fractions&#39;</span><span class="p">:</span><span class="n">header</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="s">&#39;proteins&#39;</span><span class="p">:</span><span class="n">proteins</span><span class="p">,</span> <span class="s">&#39;fi&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;pi&#39;</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="s">&#39;data&#39;</span><span class="p">:</span><span class="n">data</span><span class="p">}</span>
+</div>
+<div class="viewcode-block" id="transformData"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.transformData">[docs]</a><span class="k">def</span> <span class="nf">transformData</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rowMethod</span><span class="p">,</span> <span class="n">columnMethod</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;transformData transforms an object x according to indicies in object y; used to sort different datasets by the same protein/fraction indicies</span>
+
+<span class="sd">    :param x: a data dictionary - the one to be transformed</span>
+<span class="sd">    :type x: dict, must contain &#39;data&#39;</span>
+<span class="sd">    :param y: a data dictionary - the one containing the flipping indices</span>
+<span class="sd">    :type y: dict, must contain &#39;data&#39;, &#39;fi&#39;, &#39;pi&#39;</span>
+<span class="sd">    :param rowMethod: a boolean asking if you want to flip on the rows (proteins get sorted appropriately)</span>
+<span class="sd">    :type rowMethod: bool</span>
+<span class="sd">    :param columnMethod: a boolean asking if you want to flip on the columns (fractions get sorted appropriately)</span>
+<span class="sd">    :type columnMethod: bool</span>
+<span class="sd">    :returns:  a data ditionary. All fields(except &#39;data&#39;) in x are replaced by those in y, the data is transformed appropriately</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">toReturn</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">xt</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">idx2</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;fi&#39;</span><span class="p">]</span>
+    <span class="n">idx1</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;pi&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">rowMethod</span><span class="p">:</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx1</span><span class="p">,:]</span>
+    <span class="k">if</span> <span class="n">columnMethod</span><span class="p">:</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[:,</span><span class="n">idx2</span><span class="p">]</span>
+    <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xt</span>
+    <span class="k">return</span> <span class="n">toReturn</span>
+    </div>
+<div class="viewcode-block" id="clusterData"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.clusterData">[docs]</a><span class="k">def</span> <span class="nf">clusterData</span><span class="p">(</span><span class="n">xdata</span><span class="p">,</span> <span class="n">rowMethod</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">columnMethod</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;average&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s">&#39;euclidean&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;clusterData clusters the data either by row, by column, or both</span>
+
+<span class="sd">    :param xdata: a data dictionary - the one to be transformed</span>
+<span class="sd">    :type x: dict, must contain &#39;data&#39;, &#39;proteins&#39;, &#39;fractions&#39;</span>
+<span class="sd">    :param rowMethod: a boolean asking if you want to flip on the rows (proteins get clustered)</span>
+<span class="sd">    :type rowMethod: bool</span>
+<span class="sd">    :param columnMethod: a boolean asking if you want to flip on the columns (fractions get clustered)</span>
+<span class="sd">    :type columnMethod: bool</span>
+<span class="sd">    :param method: string defining the linkage type, defaults to &#39;average&#39; - &#39;ward&#39; might be a good option</span>
+<span class="sd">    :type method: string</span>
+<span class="sd">    :param metric: string defining the distance metric, defaults to &#39;euclidean&#39;</span>
+<span class="sd">    :type metric: string</span>
+<span class="sd">    :returns:  a data ditionary. &#39;data&#39;, &#39;proteins&#39;, &#39;fractions&#39;, &#39;fi&#39;, &#39;pi&#39;, &#39;topDendro&#39;, &#39;rightDendro&#39; are updated</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+        
+    <span class="n">xdat</span> <span class="o">=</span> <span class="n">xdata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">ind1</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span>
+    <span class="n">ind2</span> <span class="o">=</span> <span class="n">xdat</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span>
+    <span class="n">xt</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">idx1</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">idx2</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="n">toReturn</span> <span class="o">=</span> <span class="n">xdat</span>
+    <span class="n">Y1</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">Y2</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">rowMethod</span><span class="p">:</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">D1</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>  <span class="c"># full matrix</span>
+        <span class="n">Y1</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">linkage</span><span class="p">(</span><span class="n">D1</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span> <span class="c">### gene-clustering metric - &#39;average&#39;, &#39;single&#39;, &#39;centroid&#39;, &#39;complete&#39;</span>
+        <span class="n">Z1</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span> <span class="n">no_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;right&#39;</span><span class="p">)</span>
+        <span class="n">idx1</span> <span class="o">=</span> <span class="n">Z1</span><span class="p">[</span><span class="s">&#39;leaves&#39;</span><span class="p">]</span> <span class="c">### apply the clustering for the gene-dendrograms to the actual matrix data</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx1</span><span class="p">,:]</span>   <span class="c"># xt is transformed x</span>
+        <span class="n">newIndex</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx1</span><span class="p">:</span>
+            <span class="n">newIndex</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ind1</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">newIndex</span>
+        <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;pi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx1</span>
+    <span class="k">if</span> <span class="n">columnMethod</span><span class="p">:</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">D2</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+        <span class="n">Y2</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">linkage</span><span class="p">(</span><span class="n">D2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span> <span class="c">### array-clustering metric - &#39;average&#39;, &#39;single&#39;, &#39;centroid&#39;, &#39;complete&#39;</span>
+        <span class="n">Z2</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">Y2</span><span class="p">,</span> <span class="n">no_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">idx2</span> <span class="o">=</span> <span class="n">Z2</span><span class="p">[</span><span class="s">&#39;leaves&#39;</span><span class="p">]</span> <span class="c">### apply the clustering for the array-dendrograms to the actual matrix data</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[:,</span><span class="n">idx2</span><span class="p">]</span>
+        <span class="n">newIndex</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">idx2</span><span class="p">:</span>
+            <span class="n">newIndex</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ind2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">newIndex</span>
+        <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;fi&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">idx2</span>
+    <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xt</span>
+    <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;topDendro&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y2</span>
+    <span class="n">toReturn</span><span class="p">[</span><span class="s">&#39;rightDendro&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y1</span>
+    <span class="k">return</span> <span class="n">toReturn</span>
+</div>
+<div class="viewcode-block" id="determineSVDResiduals"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.determineSVDResiduals">[docs]</a><span class="k">def</span> <span class="nf">determineSVDResiduals</span><span class="p">(</span><span class="n">origDataAlt</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">testNumber</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;determineSVDResiduals calculates the distribution of residuals for each compoents on either</span>
+<span class="sd">    the Null (scrambled) or Alt(real, resampled from error values) datasets</span>
+
+<span class="sd">    :param origDataAlt: a data dictionary with the dataset to be analyzed</span>
+<span class="sd">    :type origDataAlt: dict, must contain &#39;data&#39;, &#39;proteins&#39;, &#39;fractions&#39;</span>
+<span class="sd">    :param err: a data dictionary with the error values to be analyzed, must be standard deviations</span>
+<span class="sd">    :type err: dict, must contain &#39;data&#39;, &#39;proteins&#39;, &#39;fractions&#39;</span>
+<span class="sd">    :param testNumber: an integer of the number of times to run the test to build the distribution</span>
+<span class="sd">    :type testNumber: int</span>
+<span class="sd">    :returns:  a list bearing</span>
+<span class="sd">    the mean array for the Alt hypothesis at each components (length is number of fractions),</span>
+<span class="sd">    the std array for the Alt hypothes,</span>
+<span class="sd">    the mean array for the Null hypothesis,</span>
+<span class="sd">    the std array for the Null hypothes,</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">origDataAlt</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">err</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">origDataAlt</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">err</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]):</span>
+        <span class="k">print</span> <span class="s">&quot;error in determineSVDResiduals&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">altHash</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">nullHash</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">newDataAlt</span> <span class="o">=</span> <span class="n">origDataAlt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">it</span> <span class="o">&lt;</span> <span class="n">testNumber</span><span class="p">:</span>
+            <span class="n">newDataAlt</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resampleUsingErr</span><span class="p">(</span><span class="n">origDataAlt</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">err</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+            <span class="n">altHash</span> <span class="o">=</span> <span class="n">calcSVDResid</span><span class="p">(</span><span class="n">newDataAlt</span><span class="p">,</span> <span class="n">altHash</span><span class="p">)</span>
+            <span class="n">newDataNull</span> <span class="o">=</span> <span class="n">newDataAlt</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">newDataNull</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resampleRandFracs</span><span class="p">(</span><span class="n">newDataNull</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+            <span class="n">nullHash</span> <span class="o">=</span> <span class="n">calcSVDResid</span><span class="p">(</span><span class="n">newDataNull</span><span class="p">,</span> <span class="n">nullHash</span><span class="p">)</span>
+            <span class="n">it</span> <span class="o">=</span> <span class="n">it</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">meanAltArray</span><span class="p">,</span> <span class="n">stdAltArray</span> <span class="o">=</span> <span class="n">fillMeanStdArray</span><span class="p">(</span><span class="n">altHash</span><span class="p">)</span>
+        <span class="n">meanNullArray</span><span class="p">,</span> <span class="n">stdNullArray</span> <span class="o">=</span> <span class="n">fillMeanStdArray</span><span class="p">(</span><span class="n">nullHash</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">meanAltArray</span><span class="p">,</span> <span class="n">stdAltArray</span><span class="p">,</span> <span class="n">meanNullArray</span><span class="p">,</span> <span class="n">stdNullArray</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="calcSVDResid"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.calcSVDResid">[docs]</a><span class="k">def</span> <span class="nf">calcSVDResid</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">hashToAdd</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;calcSVDResid is a helper function that adds a new residual value to a hash bearing</span>
+<span class="sd">    lists of residuals for each number of components</span>
+
+<span class="sd">    :param dataset: a data dictionary with the dataset to be analyzed</span>
+<span class="sd">    :type dataset: dict, must contain &#39;data&#39;, &#39;fractions&#39;</span>
+<span class="sd">    :param hashToAdd: a hash with keys as number of components used and values as list of variance observed</span>
+<span class="sd">    :type hashToAdd: dict with values as lists, this func will append one value to each list</span>
+<span class="sd">    :returns:  a dict bearing lists for each number of components, the lists are the residuals observed at</span>
+<span class="sd">    each component</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="n">SVD</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+    <span class="n">resids</span> <span class="o">=</span> <span class="p">[</span><span class="n">reconstructWithSVD</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span><span class="p">,</span> <span class="n">x</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">resids</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">hashToAdd</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">hashToAdd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">hashToAdd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resids</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">hashToAdd</span>
+</div>
+<div class="viewcode-block" id="fillMeanStdArray"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.fillMeanStdArray">[docs]</a><span class="k">def</span> <span class="nf">fillMeanStdArray</span><span class="p">(</span><span class="n">residHash</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;fillMeanStdArray is a helper function that takes a hash with lists of residuals and returns</span>
+<span class="sd">    lists with the mean or std deviation in those lists (keeps the returned lists ordered by</span>
+<span class="sd">    number of components</span>
+
+<span class="sd">    :param residHash: a dict with keys as number of components, values as lists of observed resids</span>
+<span class="sd">    :type data: dict</span>
+<span class="sd">    :returns:  two lists bearing</span>
+<span class="sd">    the mean of the residuals (sorted by number of components used</span>
+<span class="sd">    the std of the residuals (sorted by number of components used</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meanArray</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">stdArray</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">residHash</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">meanArray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residHash</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+        <span class="n">stdArray</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">residHash</span><span class="p">[</span><span class="n">key</span><span class="p">])</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+        
+    <span class="n">meanArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">meanArray</span><span class="p">)</span>
+    <span class="n">stdArray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stdArray</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">meanArray</span><span class="p">,</span> <span class="n">stdArray</span>
+</div>
+<div class="viewcode-block" id="SVD"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.SVD">[docs]</a><span class="k">def</span> <span class="nf">SVD</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SVD performs singular value decomposition on a 2D matrix dataset</span>
+
+<span class="sd">    :param data: the 2D matrix to factor</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :returns:  array bearing U, Sig, Vh in that order</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">U</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="n">Vh</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">Sig</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">diagsvd</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">U</span><span class="p">,</span><span class="n">Sig</span><span class="p">,</span><span class="n">Vh</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="reconstructWithSVD"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.reconstructWithSVD">[docs]</a><span class="k">def</span> <span class="nf">reconstructWithSVD</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span><span class="p">,</span> <span class="n">comps</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;reconstructs a dataset from a SVD using a set number of components</span>
+
+<span class="sd">    :param data: the 2D matrix to be reconstructed</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :param U: the 2D matrix U</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :param Sig: the 2D matrix Sig</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :param Vh: the 2D matrix Vh</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :param comp: the integer number of components to reconstruct with</span>
+<span class="sd">    :type data: int</span>
+<span class="sd">    :returns:  array bearing the reconstructed data, the residual data,</span>
+<span class="sd">    and a float with the sum of the residual in that order</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span><span class="p">,</span><span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">))</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">comps</span><span class="p">:</span>
+        <span class="n">test</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span><span class="mi">1</span>
+    <span class="n">Sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Sig</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+
+    <span class="n">recon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">U</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Sig</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asmatrix</span><span class="p">(</span><span class="n">Vh</span><span class="p">)</span>
+    <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span> <span class="o">-</span> <span class="n">recon</span><span class="p">)</span>
+
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">recon</span><span class="p">)</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">recon</span><span class="p">,</span> <span class="n">resid</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">diff</span><span class="p">)]</span>
+</div>
+<div class="viewcode-block" id="doSwap"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.doSwap">[docs]</a><span class="k">def</span> <span class="nf">doSwap</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;doSwap is a helper function that randomly swaps two elements in a row</span>
+
+<span class="sd">    :param r: a row</span>
+<span class="sd">    :type r: list</span>
+<span class="sd">    :returns:  a list with two elements randomly swapped</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">ind1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+    <span class="n">ind2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+    <span class="n">hold</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">ind1</span><span class="p">]</span>
+    <span class="n">row</span><span class="p">[</span><span class="n">ind1</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">ind2</span><span class="p">]</span>
+    <span class="n">row</span><span class="p">[</span><span class="n">ind2</span><span class="p">]</span> <span class="o">=</span> <span class="n">hold</span>
+    <span class="k">return</span> <span class="n">row</span>
+</div>
+<div class="viewcode-block" id="resampleRandFracs"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.resampleRandFracs">[docs]</a><span class="k">def</span> <span class="nf">resampleRandFracs</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;resampleRandFracs is a helper function that generates a randomzied (Null hypothesis)</span>
+<span class="sd">    dataset by randomly swapping elements of each row</span>
+
+<span class="sd">    :param d: a 2D datamatrix to be randomized</span>
+<span class="sd">    :type d: 2D datamatrix</span>
+<span class="sd">    :returns:  a randomized 2D datamatrix</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allVects</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">rowVect</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">rowVect</span><span class="p">):</span>
+            <span class="n">rowVect</span> <span class="o">=</span> <span class="n">doSwap</span><span class="p">(</span><span class="n">rowVect</span><span class="p">)</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">allVects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rowVect</span><span class="p">)</span>
+    <span class="n">newData</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">allVects</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">newData</span>
+</div>
+<div class="viewcode-block" id="resampleUsingErr"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.resampleUsingErr">[docs]</a><span class="k">def</span> <span class="nf">resampleUsingErr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">err</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;resampleUsingErr is a helper function that resamples a dataset using an error</span>
+<span class="sd">    matrix dataset in the SAME orientation, error should be in standard deviations</span>
+
+<span class="sd">    :param data: a 2D datamatrix to be resampled</span>
+<span class="sd">    :type d: 2D datamatrix</span>
+<span class="sd">    :param err: a 2D datamatrix to be resampled from - should bear standard deviations</span>
+<span class="sd">    :type d: 2D datamatrix</span>
+<span class="sd">    :returns:  a resampled 2D datamatrix</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">newData</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="n">newRow</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+            <span class="n">newRow</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="n">err</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]))</span>
+        <span class="n">newData</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newRow</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">newData</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="calcDistortion"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.calcDistortion">[docs]</a><span class="k">def</span> <span class="nf">calcDistortion</span><span class="p">(</span><span class="n">cents</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="s">&#39;euclidean&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;calcDistortion is a  helper function that determines the distance between datasets and centroids</span>
+
+<span class="sd">    :param cents: a 2D matrix of the centroids (ordered)</span>
+<span class="sd">    :type cents: 2D matrix</span>
+<span class="sd">    :param idx: a list of which vector in data is grouped with which centroid</span>
+<span class="sd">    :type idx: list</span>
+<span class="sd">    :param data: a 2D matrix of the data, we will determine the summed distance from each row in data to it centroid</span>
+<span class="sd">    and then sum over all rows</span>
+<span class="sd">    :type data: 2D matrix</span>
+<span class="sd">    :returns: a float with the total distortion</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">distor</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="p">[</span><span class="n">cents</span><span class="p">[</span><span class="n">idx</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">additionalDistor</span> <span class="o">=</span> <span class="n">ssd</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">distor</span> <span class="o">=</span> <span class="n">distor</span> <span class="o">+</span> <span class="n">additionalDistor</span>
+    <span class="k">return</span> <span class="n">distor</span>
+</div>
+<div class="viewcode-block" id="arePaired"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.arePaired">[docs]</a><span class="k">def</span> <span class="nf">arePaired</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">groupings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;arePaired is a helper function, returns 1 if groupings[a] == groupings[b]</span>
+
+<span class="sd">    :param a: index a</span>
+<span class="sd">    :type a: int</span>
+<span class="sd">    :param b: index b</span>
+<span class="sd">    :type b: int</span>
+<span class="sd">    :param groupings: list of grouping to check</span>
+<span class="sd">    :type groupings: list</span>
+<span class="sd">    :returns:  1 if a, b are in the same group, 0 else</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">groupings</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">==</span> <span class="n">groupings</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="kMeansCluster"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.kMeansCluster">[docs]</a><span class="k">def</span> <span class="nf">kMeansCluster</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">trials</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;kMeansCluster performs k means clustering on a dataset</span>
+
+<span class="sd">    :param x: a data object (must contain field &#39;data&#39;)</span>
+<span class="sd">    :type x: dict</span>
+<span class="sd">    :param k: the number of centroids to cluster to</span>
+<span class="sd">    :type k: int</span>
+<span class="sd">    :param trials: the number of times to run kmeans2 (will be run with both &#39;random&#39;</span>
+<span class="sd">    and &#39;points&#39;. The best of the two trials will be used.</span>
+<span class="sd">    :type trials: int</span>
+<span class="sd">    :returns:  a dictionary with keys idx and cents.</span>
+<span class="sd">    idx is the group number for each protein (in the orde given in the x data object</span>
+<span class="sd">    cents is a list of rowVectors with the centroids for each cluster</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">oldDistR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">oldDistP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="n">centsR</span><span class="p">,</span> <span class="n">idxR</span> <span class="o">=</span> <span class="n">scv</span><span class="o">.</span><span class="n">kmeans2</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">k</span><span class="p">,</span> <span class="nb">iter</span><span class="o">=</span><span class="n">trials</span><span class="p">,</span> <span class="n">minit</span><span class="o">=</span><span class="s">&#39;random&#39;</span><span class="p">)</span>
+    <span class="n">centsP</span><span class="p">,</span> <span class="n">idxP</span> <span class="o">=</span> <span class="n">scv</span><span class="o">.</span><span class="n">kmeans2</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">k</span><span class="p">,</span> <span class="nb">iter</span><span class="o">=</span><span class="n">trials</span><span class="p">,</span> <span class="n">minit</span><span class="o">=</span><span class="s">&#39;points&#39;</span><span class="p">)</span>
+    <span class="n">distR</span> <span class="o">=</span> <span class="n">calcDistortion</span><span class="p">(</span><span class="n">centsR</span><span class="p">,</span> <span class="n">idxR</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+    <span class="n">distP</span> <span class="o">=</span> <span class="n">calcDistortion</span><span class="p">(</span><span class="n">centsP</span><span class="p">,</span> <span class="n">idxP</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">distR</span> <span class="o">&gt;</span> <span class="n">distP</span><span class="p">:</span>
+        <span class="n">centsR</span> <span class="o">=</span> <span class="n">centsP</span>
+        <span class="n">idxR</span> <span class="o">=</span> <span class="n">idxP</span>
+        <span class="n">distR</span> <span class="o">=</span> <span class="n">distP</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;idx&#39;</span><span class="p">:</span> <span class="n">idxR</span><span class="p">,</span> <span class="s">&#39;cents&#39;</span><span class="p">:</span><span class="n">centsR</span><span class="p">}</span>
+</div>
+<div class="viewcode-block" id="iterateKMeansCluster"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.iterateKMeansCluster">[docs]</a><span class="k">def</span> <span class="nf">iterateKMeansCluster</span><span class="p">(</span><span class="n">origData</span><span class="p">,</span> <span class="n">errData</span><span class="p">,</span> <span class="n">kClusters</span><span class="p">,</span> <span class="n">kMeansTests</span><span class="p">,</span> <span class="n">kMeansRuns</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;iterateKMeansCluster performs k means clustering on a dataset multiple times,</span>
+<span class="sd">    resmapling the dataset from teh distribution defined by errData each time.</span>
+<span class="sd">    It clusters the data into kClusters</span>
+
+<span class="sd">    :param origData: a data object (must contain fields &#39;data&#39;, &#39;fractions&#39;, &#39;proteins&#39;)</span>
+<span class="sd">    :type origData: dict</span>
+<span class="sd">    :param errData: a data object (must contain field &#39;data&#39;) and be in teh same orientation</span>
+<span class="sd">    as the origData object</span>
+<span class="sd">    :type errData: dict</span>
+<span class="sd">    :param kClusters: the number of centroids to generate</span>
+<span class="sd">    :type kClusters: int</span>
+<span class="sd">    :param kMeansTests: the number of iterations to try k means clustering with (in each round</span>
+<span class="sd">    :type kMeansTests: int</span>
+<span class="sd">    :param kMeansRuns: the number of resampling runs do to</span>
+<span class="sd">    :type kMeansRuns: int</span>
+<span class="sd">    :returns:  an array of dictionaries, each row is 1 run of kMeansCluster</span>
+<span class="sd">    each dictionary has a &#39;protColorIndex&#39; field that lists the group that protein was in</span>
+<span class="sd">    and a &#39;cents&#39; field that gives the profile for that centroid</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">clusteredData</span> <span class="o">=</span> <span class="n">origData</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">allKmRuns</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;cents&#39;</span><span class="p">:[],</span> <span class="s">&#39;protColorIndex&#39;</span><span class="p">:[]}</span>
+
+    <span class="n">datToKM</span> <span class="o">=</span> <span class="n">clusteredData</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">kMeansRuns</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">kmclus</span> <span class="o">=</span> <span class="n">kMeansCluster</span><span class="p">(</span><span class="n">datToKM</span><span class="p">,</span> <span class="n">kClusters</span><span class="p">,</span> <span class="n">kMeansTests</span><span class="p">)</span>
+        <span class="n">allKmRuns</span><span class="p">[</span><span class="s">&#39;protColorIndex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kmclus</span><span class="p">[</span><span class="s">&#39;idx&#39;</span><span class="p">])</span>
+        <span class="n">allKmRuns</span><span class="p">[</span><span class="s">&#39;cents&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">kmclus</span><span class="p">[</span><span class="s">&#39;cents&#39;</span><span class="p">])</span>
+        <span class="c">#allKmRuns.append(protColorIndex)</span>
+        <span class="n">datToKM</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resampleUsingErr</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">errData</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+        <span class="n">kMeansRuns</span> <span class="o">=</span> <span class="n">kMeansRuns</span><span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">allKmRuns</span>
+
+    </div>
+<div class="viewcode-block" id="makeKMeansCorrelationMatrix"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.makeKMeansCorrelationMatrix">[docs]</a><span class="k">def</span> <span class="nf">makeKMeansCorrelationMatrix</span><span class="p">(</span><span class="n">allKmRuns</span><span class="p">,</span> <span class="n">clusteredData</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;makeKMeansCorrelationMatrix builds a correlation matrix data object using the groupings given in allKmRuns</span>
+<span class="sd">    each entry is the number of times element i and j were in the same cluster (i.e. each row vector of allKmRuns</span>
+<span class="sd">    that has protein i and protein j in the same group increments the returned matrix[i][j] by one</span>
+
+<span class="sd">    :param allKmRuns: a 2D matrix</span>
+<span class="sd">    :type allKmRuns: dict</span>
+<span class="sd">    :param origData: a 2D datamatrix to be resampled</span>
+<span class="sd">    :type origData: 2D datamatrix</span>
+<span class="sd">    :param err: a 2D datamatrix to be resampled from - should bear standard deviations</span>
+<span class="sd">    :type err: 2D datamatrix</span>
+<span class="sd">    :returns:  a data object that is a copy of clusteredData with the following changes,</span>
+<span class="sd">    &#39;fractions&#39; has the &#39;proteins&#39; of clusteredData</span>
+<span class="sd">    &#39;data&#39; has the number of times that two proteins co-grouped based on the allKmRuns data input</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">correlationData</span> <span class="o">=</span> <span class="n">clusteredData</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">kmRunCorrs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">])))</span>
+
+    <span class="k">for</span> <span class="n">groupings</span> <span class="ow">in</span> <span class="n">allKmRuns</span><span class="p">[</span><span class="s">&#39;protColorIndex&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">correlationData</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">])):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">correlationData</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">])):</span>
+                <span class="n">kmRunCorrs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmRunCorrs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">arePaired</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">groupings</span><span class="p">)</span>
+    
+    <span class="n">correlationData</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmRunCorrs</span>
+    <span class="n">correlationData</span><span class="p">[</span><span class="s">&#39;fractions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">correlationData</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">correlationData</span>
+
+</div>
+<div class="viewcode-block" id="drawSprings"><a class="viewcode-back" href="../qMSClustering.html#qMSClustering.drawSprings">[docs]</a><span class="k">def</span> <span class="nf">drawSprings</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">,</span> <span class="n">kclusters</span><span class="p">,</span> <span class="n">initialPosFileName</span><span class="p">,</span> <span class="n">mult</span><span class="o">=</span><span class="mf">1.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;drawSprings draws two figures, one of the spring evolution at 9 timepoints, one of the initial vs. final.</span>
+
+<span class="sd">    :param corrMatrix: a data object generated by kmeans cluster - has the correlations between objects.</span>
+<span class="sd">    :type corrMatrix: dict - must have &#39;data&#39; and &#39;proteins&#39;</span>
+<span class="sd">    :param kclusters: the number of kclusters used in the analysis (what was passed to kmeans)</span>
+<span class="sd">    :type kclusters: int</span>
+<span class="sd">    :param initialPosFileName: a string pointing to the initial positions of each node - see nierhausPositions.txt</span>
+<span class="sd">    :type initialPosFileName: string</span>
+<span class="sd">    :param mult: a float of the base of the exponent to exapand on in each spring interation</span>
+<span class="sd">    :type mult: float</span>
+<span class="sd">    :returns:  an array of figures - first is the evolution, second is the start and end.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">readDataFile</span><span class="p">(</span><span class="n">initialPosFileName</span><span class="p">)</span>
+    <span class="n">initialNodePos</span> <span class="o">=</span> <span class="p">{</span><span class="n">positions</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]:</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mf">4.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mf">5.0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]))}</span>
+       
+    <span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]]</span>
+
+    <span class="n">connection</span> <span class="o">=</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">])</span>
+
+    <span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">][</span><span class="n">x</span><span class="p">],</span><span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">][</span><span class="n">y</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="n">connection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">[</span><span class="s">&#39;proteins&#39;</span><span class="p">]))</span> <span class="k">if</span> <span class="p">(</span><span class="n">connection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">!=</span><span class="mi">0</span><span class="p">)]</span>
+    <span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">G</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">()]</span>
+
+    <span class="n">notes</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">notes</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&quot;nierhaus positions_kclusters=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kclusters</span><span class="p">))</span>
+    <span class="n">drawNodePos</span> <span class="o">=</span> <span class="n">initialNodePos</span>
+    <span class="n">yDiff</span> <span class="o">=</span> <span class="p">[</span><span class="n">initialNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">drawNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">drawNodePos</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">drawNodePos</span><span class="p">,</span>
+                    <span class="n">node_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">node_color</span> <span class="o">=</span> <span class="n">yDiff</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">edge_color</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">edge_vmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">edge_vmax</span> <span class="o">=</span> <span class="n">kMeansRuns</span><span class="p">,</span> <span class="n">edge_cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">autumn_r</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+
+    <span class="n">iters</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mult</span><span class="o">**</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">notes</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&quot;spring iteration=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">iters</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;_kclusters=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kclusters</span><span class="p">))</span>
+    <span class="n">drawNodePos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">initialNodePos</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iters</span><span class="p">)</span>
+    <span class="n">yDiff</span> <span class="o">=</span> <span class="p">[</span><span class="n">initialNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">drawNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">drawNodePos</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">drawNodePos</span><span class="p">,</span>
+                    <span class="n">node_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">node_color</span> <span class="o">=</span> <span class="n">yDiff</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">edge_color</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">edge_vmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">edge_vmax</span> <span class="o">=</span> <span class="n">kMeansRuns</span><span class="p">,</span> <span class="n">edge_cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">autumn_r</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                    <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+
+    <span class="n">cb1ax</span> <span class="o">=</span> <span class="n">notes</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">autumn_r</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cb1ax</span><span class="p">)</span>
+    <span class="n">cb2ax</span> <span class="o">=</span> <span class="n">notes</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.925</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">cb2</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ColorbarBase</span><span class="p">(</span><span class="n">cb2ax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu_r</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;vertical&#39;</span><span class="p">)</span>
+        
+    <span class="n">notes2</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">drawNodePos</span> <span class="o">=</span> <span class="n">initialNodePos</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">notes2</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s">&quot;iterations=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">mult</span><span class="o">**</span><span class="n">i</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;_k=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kclusters</span><span class="p">))</span>
+        <span class="n">drawNodePos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span><span class="o">=</span><span class="n">drawNodePos</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">mult</span><span class="o">**</span><span class="n">i</span><span class="p">))</span>
+
+        <span class="n">yDiff</span> <span class="o">=</span> <span class="p">[</span><span class="n">initialNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">drawNodePos</span><span class="p">[</span><span class="n">x</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">drawNodePos</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">drawNodePos</span><span class="p">,</span>
+                        <span class="n">node_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">node_color</span> <span class="o">=</span> <span class="n">yDiff</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="n">edge_color</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">edge_vmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">edge_vmax</span> <span class="o">=</span> <span class="n">kMeansRuns</span><span class="p">,</span> <span class="n">edge_cmap</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">autumn_r</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">font_weight</span><span class="o">=</span><span class="s">&#39;bold&#39;</span><span class="p">)</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="c">####initialize stuff####</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">RdBu</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;ward&#39;</span>
+    <span class="n">metric</span> <span class="o">=</span> <span class="s">&#39;euclidean&#39;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s">&#39;/home/jhdavis/scripts/python/qMSClustering/testData/&#39;</span>
+    <span class="n">fileToRead</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s">&#39;ssc_50S_medLN_zeros.txt&#39;</span>
+    <span class="n">errorFile</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s">&#39;ssc_50S_stdErrLN_zeros.txt&#39;</span>
+    <span class="n">testNumber</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">doPCA</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">pltPCA</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">showPlots</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">savePlots</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">nodeColorRange</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s">&#39;hsv&#39;</span><span class="p">)</span>
+    <span class="n">kClusters</span> <span class="o">=</span> <span class="mi">6</span>
+
+    <span class="n">kMeansTests</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">kMeansRuns</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">)</span>
+    
+    <span class="n">rawData</span> <span class="o">=</span> <span class="n">readDataFile</span><span class="p">(</span><span class="n">fileToRead</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">errData</span> <span class="o">=</span> <span class="n">readDataFile</span><span class="p">(</span><span class="n">errorFile</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">rawMap</span> <span class="o">=</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">rawData</span><span class="p">,</span> <span class="s">&quot;rawMap&quot;</span><span class="p">)</span>
+    
+    <span class="n">clusteredData</span> <span class="o">=</span> <span class="n">clusterData</span><span class="p">(</span><span class="n">rawData</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
+    <span class="n">clusteredErr</span> <span class="o">=</span> <span class="n">transformData</span><span class="p">(</span><span class="n">errData</span><span class="p">,</span> <span class="n">clusteredData</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="n">cluteredMap</span> <span class="o">=</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="s">&quot;clusteredMap&quot;</span><span class="p">,</span> <span class="n">dendro</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="n">SVD</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+
+    <span class="n">performAllReconstructions</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sig</span><span class="p">,</span> <span class="n">Vh</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        
+    <span class="n">resampleUsingErr</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">],</span> <span class="n">clusteredErr</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">])</span>
+
+    <span class="p">[</span><span class="n">uAlt</span><span class="p">,</span> <span class="n">sigAlt</span><span class="p">,</span> <span class="n">uNull</span><span class="p">,</span> <span class="n">sigNull</span><span class="p">]</span> <span class="o">=</span> <span class="n">determineSVDResiduals</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">clusteredErr</span><span class="p">,</span> <span class="n">testNumber</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">drawSVDResidualPlot</span><span class="p">(</span><span class="n">uAlt</span><span class="p">,</span> <span class="n">sigAlt</span><span class="p">,</span> <span class="n">uNull</span><span class="p">,</span> <span class="n">sigNull</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">)</span>
+    <span class="c">#doProjections(clusteredData, pltPCA, pltPCA, (not doPCA))</span>
+    <span class="c">#doProjections(clusteredData, pltPCA, pltPCA, doPCA, protColors=protColorIndex, cIndex=colorIndex)</span>
+    <span class="n">kclusters</span> <span class="o">=</span> <span class="n">kClusters</span>
+    <span class="n">kmRuns</span> <span class="o">=</span> <span class="n">iterateKMeansCluster</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">errData</span><span class="p">,</span> <span class="n">kclusters</span><span class="p">,</span> <span class="n">kMeansTests</span><span class="p">,</span> <span class="n">kMeansRuns</span><span class="p">)</span>
+    <span class="n">finalPIndex</span> <span class="o">=</span> <span class="n">kmRuns</span><span class="p">[</span><span class="s">&#39;protColorIndex&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">finalCentroids</span> <span class="o">=</span> <span class="n">kmRuns</span><span class="p">[</span><span class="s">&#39;cents&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cluteredMap</span> <span class="o">=</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">clusteredData</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;MapColoredbyKm&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kclusters</span><span class="p">),</span> <span class="n">dendro</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="n">finalPIndex</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="n">nodeColorRange</span><span class="p">,</span> <span class="n">km</span><span class="o">=</span><span class="n">finalCentroids</span><span class="p">)</span>
+    <span class="n">corrMatrix</span> <span class="o">=</span> <span class="n">makeKMeansCorrelationMatrix</span><span class="p">(</span><span class="n">kmRuns</span><span class="p">,</span> <span class="n">clusteredData</span><span class="p">)</span>
+    <span class="n">corrMap</span> <span class="o">=</span> <span class="n">drawHeatMap</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;corrMapKm &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">kclusters</span><span class="p">),</span> <span class="n">dendro</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">protColors</span><span class="o">=</span><span class="n">finalPIndex</span><span class="p">,</span> <span class="n">cIndex</span><span class="o">=</span><span class="n">nodeColorRange</span><span class="p">)</span>
+    <span class="n">drawSprings</span><span class="p">(</span><span class="n">corrMatrix</span><span class="p">,</span> <span class="n">kclusters</span><span class="p">,</span> <span class="n">path</span><span class="o">+</span><span class="s">&quot;nierhausPositions.txt&quot;</span><span class="p">,</span> <span class="n">mult</span><span class="o">=</span><span class="mf">3.5</span><span class="p">)</span>
+
+    
+    <span class="sd">&#39;&#39;&#39;usefull calls:</span>
+
+<span class="sd">    rawMap = drawHeatMap(rawData, &quot;rawMap&quot;)</span>
+<span class="sd">    reconstructedData = clusteredData.copy()</span>
+<span class="sd">    reconstructedData[&#39;data&#39;] = reconstructWithSVD(clusteredData[&#39;data&#39;], U, Sig, Vh, 3)[0]</span>
+<span class="sd">    kmRuns = iterateKMeansCluster(reconstructedData, errData, kClusters, kMeansTests, kMeansRuns, True)</span>
+<span class="sd">    reconMap = drawHeatMap(reconstructedData, &quot;reconstructed_3comps&quot;, dendro=True)</span>
+<span class="sd">    plotComponents(U, 10, proteins=clusteredData[&#39;proteins&#39;])</span>
+<span class="sd">    drawProfiles(clusteredData[&#39;data&#39;])</span>
+
+<span class="sd">    kmRuns = iterateKMeansCluster(clusteredData, errData, kClusters, kMeansTests, kMeansRuns)</span>
+<span class="sd">    finalPIndex = kmRuns[&#39;protColorIndex&#39;][-1]</span>
+<span class="sd">    finalCentroids = kmRuns[&#39;cents&#39;][-1]</span>
+<span class="sd">    cluteredMap = drawHeatMap(clusteredData, name=&quot;MapColoredbyKm&quot;, dendro=True, protColors=finalPIndex, cIndex=nodeColorRange, km=finalCentroids)</span>
+<span class="sd">    corrMatrix = makeKMeansCorrelationMatrix(kmRuns, clusteredData)</span>
+<span class="sd">    corrMap = drawHeatMap(corrMatrix, name=&quot;corrMap&quot;, dendro=False, protColors=finalPIndex, cIndex=nodeColorRange)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">savePlots</span><span class="p">:</span>
+        <span class="n">figures</span><span class="o">=</span><span class="p">[</span><span class="n">manager</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">figure</span> <span class="k">for</span> <span class="n">manager</span> <span class="ow">in</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">_pylab_helpers</span><span class="o">.</span><span class="n">Gcf</span><span class="o">.</span><span class="n">get_all_fig_managers</span><span class="p">()]</span>
+        <span class="k">print</span> <span class="n">figures</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">figure</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">figures</span><span class="p">):</span>
+            <span class="n">figure</span><span class="o">.</span><span class="n">set_size_inches</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">18</span><span class="p">)</span>
+            <span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&#39;figure</span><span class="si">%d</span><span class="s">.png&#39;</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s">&#39;tight&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">showPlots</span><span class="p">:</span>
+        <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span> <span class="c"># show the plot</span>
+        
+        
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joey Davis.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

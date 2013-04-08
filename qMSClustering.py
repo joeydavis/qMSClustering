@@ -1,26 +1,22 @@
 import csv
-import math
 import matplotlib.pyplot as pylab
-from matplotlib import mpl
-from mpl_toolkits.mplot3d import Axes3D
 import scipy.linalg as sl
 import scipy.cluster.hierarchy as sch
 import scipy.spatial.distance as ssd
 import scipy.cluster.vq as scv
 import numpy as np
-from matplotlib.mlab import PCA
 import numpy.linalg as npla
-import string
-import time
-import sys, os
-import getopt
-from mpl_toolkits.mplot3d import proj3d
-from joeyDrawLibrary import *
-from string import ascii_letters
 import networkx as nx
 import matplotlib.colors as mpc
 import random
 import matplotlib._pylab_helpers
+
+from matplotlib.mlab import PCA
+from mpl_toolkits.mplot3d import proj3d
+from jhdavisVizLib import *
+from string import ascii_letters
+from matplotlib import mpl
+from mpl_toolkits.mplot3d import Axes3D
 
 def readDataFile(filename, scale=1.0):
     """readDataFile reads a datafile. The datafile should be tab separated and have both column and row headers listing the proteins/fractions.
@@ -136,10 +132,10 @@ def determineSVDResiduals(origDataAlt, err, testNumber=100):
     :param testNumber: an integer of the number of times to run the test to build the distribution
     :type testNumber: int
     :returns:  a list bearing
-    the mean array for the Alt hypothesis at each components (length is number of fractions),
-    the std array for the Alt hypothes,
-    the mean array for the Null hypothesis,
-    the std array for the Null hypothes,
+        the mean array for the Alt hypothesis at each components (length is number of fractions),
+        the std array for the Alt hypothes,
+        the mean array for the Null hypothesis,
+        the std array for the Null hypothes,
 
     """
     if not(origDataAlt['fractions'] == err['fractions'] and origDataAlt['proteins'] == err['proteins']):
@@ -170,7 +166,7 @@ def calcSVDResid(dataset, hashToAdd):
     :param hashToAdd: a hash with keys as number of components used and values as list of variance observed
     :type hashToAdd: dict with values as lists, this func will append one value to each list
     :returns:  a dict bearing lists for each number of components, the lists are the residuals observed at
-    each component
+        each component
 
     """
     U, Sig, Vh = SVD(dataset['data'])
@@ -189,8 +185,8 @@ def fillMeanStdArray(residHash):
     :param residHash: a dict with keys as number of components, values as lists of observed resids
     :type data: dict
     :returns:  two lists bearing
-    the mean of the residuals (sorted by number of components used
-    the std of the residuals (sorted by number of components used
+        the mean of the residuals (sorted by number of components used
+        the std of the residuals (sorted by number of components used
 
     """
     meanArray = []
@@ -231,7 +227,7 @@ def reconstructWithSVD(data, U, Sig, Vh, comps):
     :param comp: the integer number of components to reconstruct with
     :type data: int
     :returns:  array bearing the reconstructed data, the residual data,
-    and a float with the sum of the residual in that order
+        and a float with the sum of the residual in that order
 
     """
     M,N = data.shape
@@ -312,7 +308,7 @@ def calcDistortion(cents, idx, data, m='euclidean'):
     :param idx: a list of which vector in data is grouped with which centroid
     :type idx: list
     :param data: a 2D matrix of the data, we will determine the summed distance from each row in data to it centroid
-    and then sum over all rows
+        and then sum over all rows
     :type data: 2D matrix
     :returns: a float with the total distortion
     
@@ -349,11 +345,11 @@ def kMeansCluster(x, k, trials):
     :param k: the number of centroids to cluster to
     :type k: int
     :param trials: the number of times to run kmeans2 (will be run with both 'random'
-    and 'points'. The best of the two trials will be used.
+        and 'points'. The best of the two trials will be used.
     :type trials: int
     :returns:  a dictionary with keys idx and cents.
-    idx is the group number for each protein (in the orde given in the x data object
-    cents is a list of rowVectors with the centroids for each cluster
+        idx is the group number for each protein (in the orde given in the x data object
+        cents is a list of rowVectors with the centroids for each cluster
 
     """
     data = x['data']
@@ -379,7 +375,7 @@ def iterateKMeansCluster(origData, errData, kClusters, kMeansTests, kMeansRuns):
     :param origData: a data object (must contain fields 'data', 'fractions', 'proteins')
     :type origData: dict
     :param errData: a data object (must contain field 'data') and be in teh same orientation
-    as the origData object
+        as the origData object
     :type errData: dict
     :param kClusters: the number of centroids to generate
     :type kClusters: int
@@ -388,8 +384,8 @@ def iterateKMeansCluster(origData, errData, kClusters, kMeansTests, kMeansRuns):
     :param kMeansRuns: the number of resampling runs do to
     :type kMeansRuns: int
     :returns:  an array of dictionaries, each row is 1 run of kMeansCluster
-    each dictionary has a 'protColorIndex' field that lists the group that protein was in
-    and a 'cents' field that gives the profile for that centroid
+        each dictionary has a 'protColorIndex' field that lists the group that protein was in
+        and a 'cents' field that gives the profile for that centroid
 
     """
     clusteredData = origData.copy()
@@ -419,8 +415,8 @@ def makeKMeansCorrelationMatrix(allKmRuns, clusteredData):
     :param err: a 2D datamatrix to be resampled from - should bear standard deviations
     :type err: 2D datamatrix
     :returns:  a data object that is a copy of clusteredData with the following changes,
-    'fractions' has the 'proteins' of clusteredData
-    'data' has the number of times that two proteins co-grouped based on the allKmRuns data input
+        'fractions' has the 'proteins' of clusteredData
+        'data' has the number of times that two proteins co-grouped based on the allKmRuns data input
 
     """
     correlationData = clusteredData.copy()
@@ -502,19 +498,20 @@ if __name__ == '__main__':
     colors = pylab.cm.RdBu
     method = 'ward'
     metric = 'euclidean'
-    fileToRead = 'ssc_50S_medLN_zeros.txt'
-    errorFile = 'ssc_50S_stdErrLN_zeros.txt'
-    testNumber = 50
+    path = '/home/jhdavis/scripts/python/qMSClustering/testData/'
+    fileToRead = path+'ssc_50S_medLN_zeros.txt'
+    errorFile = path+'ssc_50S_stdErrLN_zeros.txt'
+    testNumber = 5
     doPCA = True
     pltPCA = True
-    showPlots = False
-    savePlots = True
+    showPlots = True
+    savePlots = False
     sigmas = 3
     nodeColorRange = pylab.get_cmap('hsv')
     kClusters = 6
 
-    kMeansTests = 100
-    kMeansRuns = 50
+    kMeansTests = 600
+    kMeansRuns = 400
 
     pylab.close('all')
     
@@ -522,11 +519,13 @@ if __name__ == '__main__':
     errData = readDataFile(errorFile, 1)
 
     rawMap = drawHeatMap(rawData, "rawMap")
+
     
     clusteredData = clusterData(rawData, True, False, method, metric)
     clusteredErr = transformData(errData, clusteredData, True, False)
 
     cluteredMap = drawHeatMap(clusteredData, "clusteredMap", dendro=True)
+    cluteredMap = drawHeatMap(errData, "stdErrorMeanMap", dendro=False)
     
     U, Sig, Vh = SVD(clusteredData['data'])
 
@@ -536,17 +535,16 @@ if __name__ == '__main__':
 
     [uAlt, sigAlt, uNull, sigNull] = determineSVDResiduals(clusteredData, clusteredErr, testNumber=100)
     drawSVDResidualPlot(uAlt, sigAlt, uNull, sigNull, sigmas)
-    
     #doProjections(clusteredData, pltPCA, pltPCA, (not doPCA))
     #doProjections(clusteredData, pltPCA, pltPCA, doPCA, protColors=protColorIndex, cIndex=colorIndex)
-    for kclusters in range(1,11):
-        kmRuns = iterateKMeansCluster(clusteredData, errData, kclusters, kMeansTests, kMeansRuns)
-        finalPIndex = kmRuns['protColorIndex'][-1]
-        finalCentroids = kmRuns['cents'][-1]
-        cluteredMap = drawHeatMap(clusteredData, name="MapColoredbyKm" + str(kclusters), dendro=True, protColors=finalPIndex, cIndex=nodeColorRange, km=finalCentroids)
-        corrMatrix = makeKMeansCorrelationMatrix(kmRuns, clusteredData)
-        corrMap = drawHeatMap(corrMatrix, name="corrMapKm " + str(kclusters), dendro=False, protColors=finalPIndex, cIndex=nodeColorRange)
-        drawSprings(corrMatrix, kclusters, "nierhausPositions.txt", mult=3.5)
+    kclusters = kClusters
+    kmRuns = iterateKMeansCluster(clusteredData, errData, kclusters, kMeansTests, kMeansRuns)
+    finalPIndex = kmRuns['protColorIndex'][-1]
+    finalCentroids = kmRuns['cents'][-1]
+    cluteredMap = drawHeatMap(clusteredData, name="MapColoredbyKm" + str(kclusters), dendro=True, protColors=finalPIndex, cIndex=nodeColorRange, km=finalCentroids)
+    corrMatrix = makeKMeansCorrelationMatrix(kmRuns, clusteredData)
+    corrMap = drawHeatMap(corrMatrix, name="corrMapKm " + str(kclusters), dendro=False, protColors=finalPIndex, cIndex=nodeColorRange)
+    drawSprings(corrMatrix, kclusters, path+"nierhausPositions.txt", mult=3)
 
     
     '''usefull calls:

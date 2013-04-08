@@ -1,0 +1,498 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>test2 &mdash; qMSClustering 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="qMSClustering 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../index.html"><img src="../_static/logo.png" border="0" alt="qMSClustering"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for test2</h1><div class="highlight"><pre>
+<span class="c">#################</span>
+<span class="c">### Imports an tab-delimited expression matrix and produces and hierarchically clustered heatmap</span>
+<span class="c">#################</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">pylab</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">mpl</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">as</span> <span class="nn">sch</span>
+<span class="kn">import</span> <span class="nn">scipy.spatial.distance</span> <span class="kn">as</span> <span class="nn">dist</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">getopt</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="c">################# Perform the hierarchical clustering #################</span>
+
+<div class="viewcode-block" id="heatmap"><a class="viewcode-back" href="../test2.html#test2.heatmap">[docs]</a><span class="k">def</span> <span class="nf">heatmap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">row_header</span><span class="p">,</span> <span class="n">column_header</span><span class="p">,</span> <span class="n">row_method</span><span class="p">,</span>
+            <span class="n">column_method</span><span class="p">,</span> <span class="n">row_metric</span><span class="p">,</span> <span class="n">column_metric</span><span class="p">,</span>
+            <span class="n">color_gradient</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    
+    <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">Performing hiearchical clustering using </span><span class="si">%s</span><span class="s"> for columns and </span><span class="si">%s</span><span class="s"> for rows&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">column_metric</span><span class="p">,</span><span class="n">row_metric</span><span class="p">)</span>
+        
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This below code is based in large part on the protype methods:</span>
+<span class="sd">    http://old.nabble.com/How-to-plot-heatmap-with-matplotlib--td32534593.html</span>
+<span class="sd">    http://stackoverflow.com/questions/7664826/how-to-get-flat-clustering-corresponding-to-color-clusters-in-the-dendrogram-cre</span>
+
+<span class="sd">    x is an m by n ndarray, m observations, n genes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c">### Define the color gradient to use based on the provided name</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;red_white_blue&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">bwr</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;red_black_sky&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">RedBlackSkyBlue</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;red_black_blue&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">RedBlackBlue</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;red_black_green&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">RedBlackGreen</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;yellow_black_blue&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">YellowBlackBlue</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;seismic&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">seismic</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;green_white_purple&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">PiYG_r</span>
+    <span class="k">if</span> <span class="n">color_gradient</span> <span class="o">==</span> <span class="s">&#39;coolwarm&#39;</span><span class="p">:</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">pylab</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">coolwarm</span>
+
+    <span class="c">### Scale the max and min colors so that 0 is white/black</span>
+    <span class="c">#vmin=x.min()</span>
+    <span class="c">#vmax=x.max()</span>
+    <span class="c">#vmax = max([vmax,abs(vmin)])</span>
+    <span class="c">#vmin = vmax*-1</span>
+    <span class="c">#norm = mpl.colors.Normalize(vmin/2, vmax/2) ### adjust the max and min to scale these colors</span>
+
+    <span class="c">### Scale the Matplotlib window size</span>
+    <span class="n">default_window_hight</span> <span class="o">=</span> <span class="mf">8.5</span>
+    <span class="n">default_window_width</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">pylab</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">default_window_width</span><span class="p">,</span><span class="n">default_window_hight</span><span class="p">))</span> <span class="c">### could use m,n to scale here</span>
+    <span class="n">color_bar_w</span> <span class="o">=</span> <span class="mf">0.015</span> <span class="c">### Sufficient size to show</span>
+        
+    <span class="c">## calculate positions for all elements</span>
+    <span class="c"># ax1, placement of dendrogram 1, on the left of the heatmap</span>
+    <span class="c">#if row_method != None: w1 = </span>
+    <span class="p">[</span><span class="n">ax1_x</span><span class="p">,</span> <span class="n">ax1_y</span><span class="p">,</span> <span class="n">ax1_w</span><span class="p">,</span> <span class="n">ax1_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.6</span><span class="p">]</span>   <span class="c">### The second value controls the position of the matrix relative to the bottom of the view</span>
+    <span class="n">width_between_ax1_axr</span> <span class="o">=</span> <span class="mf">0.004</span>
+    <span class="n">height_between_ax1_axc</span> <span class="o">=</span> <span class="mf">0.004</span> <span class="c">### distance between the top color bar axis and the matrix</span>
+    
+    <span class="c"># axr, placement of row side colorbar</span>
+    <span class="p">[</span><span class="n">axr_x</span><span class="p">,</span> <span class="n">axr_y</span><span class="p">,</span> <span class="n">axr_w</span><span class="p">,</span> <span class="n">axr_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.31</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">color_bar_w</span><span class="p">,</span><span class="mf">0.6</span><span class="p">]</span> <span class="c">### second to last controls the width of the side color bar - 0.015 when showing</span>
+    <span class="n">axr_x</span> <span class="o">=</span> <span class="n">ax1_x</span> <span class="o">+</span> <span class="n">ax1_w</span> <span class="o">+</span> <span class="n">width_between_ax1_axr</span>
+    <span class="n">axr_y</span> <span class="o">=</span> <span class="n">ax1_y</span><span class="p">;</span> <span class="n">axr_h</span> <span class="o">=</span> <span class="n">ax1_h</span>
+    <span class="n">width_between_axr_axm</span> <span class="o">=</span> <span class="mf">0.004</span>
+
+    <span class="c"># axc, placement of column side colorbar</span>
+    <span class="p">[</span><span class="n">axc_x</span><span class="p">,</span> <span class="n">axc_y</span><span class="p">,</span> <span class="n">axc_w</span><span class="p">,</span> <span class="n">axc_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.63</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="n">color_bar_w</span><span class="p">]</span> <span class="c">### last one controls the hight of the top color bar - 0.015 when showing</span>
+    <span class="n">axc_x</span> <span class="o">=</span> <span class="n">axr_x</span> <span class="o">+</span> <span class="n">axr_w</span> <span class="o">+</span> <span class="n">width_between_axr_axm</span>
+    <span class="n">axc_y</span> <span class="o">=</span> <span class="n">ax1_y</span> <span class="o">+</span> <span class="n">ax1_h</span> <span class="o">+</span> <span class="n">height_between_ax1_axc</span>
+    <span class="n">height_between_axc_ax2</span> <span class="o">=</span> <span class="mf">0.004</span>
+
+    <span class="c"># axm, placement of heatmap for the data matrix</span>
+    <span class="p">[</span><span class="n">axm_x</span><span class="p">,</span> <span class="n">axm_y</span><span class="p">,</span> <span class="n">axm_w</span><span class="p">,</span> <span class="n">axm_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]</span>
+    <span class="n">axm_x</span> <span class="o">=</span> <span class="n">axr_x</span> <span class="o">+</span> <span class="n">axr_w</span> <span class="o">+</span> <span class="n">width_between_axr_axm</span>
+    <span class="n">axm_y</span> <span class="o">=</span> <span class="n">ax1_y</span><span class="p">;</span> <span class="n">axm_h</span> <span class="o">=</span> <span class="n">ax1_h</span>
+    <span class="n">axm_w</span> <span class="o">=</span> <span class="n">axc_w</span>
+
+    <span class="c"># ax2, placement of dendrogram 2, on the top of the heatmap</span>
+    <span class="p">[</span><span class="n">ax2_x</span><span class="p">,</span> <span class="n">ax2_y</span><span class="p">,</span> <span class="n">ax2_w</span><span class="p">,</span> <span class="n">ax2_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span><span class="mf">0.72</span><span class="p">,</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.15</span><span class="p">]</span> <span class="c">### last one controls hight of the dendrogram</span>
+    <span class="n">ax2_x</span> <span class="o">=</span> <span class="n">axr_x</span> <span class="o">+</span> <span class="n">axr_w</span> <span class="o">+</span> <span class="n">width_between_axr_axm</span>
+    <span class="n">ax2_y</span> <span class="o">=</span> <span class="n">ax1_y</span> <span class="o">+</span> <span class="n">ax1_h</span> <span class="o">+</span> <span class="n">height_between_ax1_axc</span> <span class="o">+</span> <span class="n">axc_h</span> <span class="o">+</span> <span class="n">height_between_axc_ax2</span>
+    <span class="n">ax2_w</span> <span class="o">=</span> <span class="n">axc_w</span>
+
+    <span class="c"># axcb - placement of the color legend</span>
+    <span class="p">[</span><span class="n">axcb_x</span><span class="p">,</span> <span class="n">axcb_y</span><span class="p">,</span> <span class="n">axcb_w</span><span class="p">,</span> <span class="n">axcb_h</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span><span class="mf">0.22</span><span class="p">,</span><span class="mf">0.05</span><span class="p">,</span><span class="mf">0.6</span><span class="p">]</span>
+
+    <span class="c"># Compute and plot top dendrogram</span>
+    <span class="k">if</span> <span class="n">column_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">D2</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">ax2_x</span><span class="p">,</span> <span class="n">ax2_y</span><span class="p">,</span> <span class="n">ax2_w</span><span class="p">,</span> <span class="n">ax2_h</span><span class="p">],</span> <span class="n">frame_on</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">Y2</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">linkage</span><span class="p">(</span><span class="n">D2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">column_method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">column_metric</span><span class="p">)</span> <span class="c">### array-clustering metric - &#39;average&#39;, &#39;single&#39;, &#39;centroid&#39;, &#39;complete&#39;</span>
+        <span class="n">Z2</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">Y2</span><span class="p">)</span>
+        <span class="n">ind2</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">fcluster</span><span class="p">(</span><span class="n">Y2</span><span class="p">,</span><span class="mf">0.7</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">Y2</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]),</span><span class="s">&#39;distance&#39;</span><span class="p">)</span> <span class="c">### This is the default behavior of dendrogram</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span> <span class="c">### Hides ticks</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        <span class="n">time_diff</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&#39;Column clustering completed in </span><span class="si">%s</span><span class="s"> seconds&#39;</span> <span class="o">%</span> <span class="n">time_diff</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind2</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;NA&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">column_header</span><span class="p">)</span> <span class="c">### Used for exporting the flat cluster data</span>
+        
+    <span class="c"># Compute and plot left dendrogram.</span>
+    <span class="k">if</span> <span class="n">row_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">D1</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">squareform</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>  <span class="c"># full matrix</span>
+        <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">ax1_x</span><span class="p">,</span> <span class="n">ax1_y</span><span class="p">,</span> <span class="n">ax1_w</span><span class="p">,</span> <span class="n">ax1_h</span><span class="p">],</span> <span class="n">frame_on</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="c"># frame_on may be False</span>
+        <span class="n">Y1</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">linkage</span><span class="p">(</span><span class="n">D1</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">row_method</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">row_metric</span><span class="p">)</span> <span class="c">### gene-clustering metric - &#39;average&#39;, &#39;single&#39;, &#39;centroid&#39;, &#39;complete&#39;</span>
+        <span class="n">Z1</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">dendrogram</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;right&#39;</span><span class="p">)</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="n">sch</span><span class="o">.</span><span class="n">fcluster</span><span class="p">(</span><span class="n">Y1</span><span class="p">,</span><span class="mf">0.7</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">Y1</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]),</span><span class="s">&#39;distance&#39;</span><span class="p">)</span> <span class="c">### This is the default behavior of dendrogram</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span> <span class="c">### Hides ticks</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+        <span class="n">time_diff</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">print</span> <span class="s">&#39;Row clustering completed in </span><span class="si">%s</span><span class="s"> seconds&#39;</span> <span class="o">%</span> <span class="n">time_diff</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;NA&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">row_header</span><span class="p">)</span> <span class="c">### Used for exporting the flat cluster data</span>
+        
+    <span class="c"># Plot distance matrix.</span>
+    <span class="n">axm</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">axm_x</span><span class="p">,</span> <span class="n">axm_y</span><span class="p">,</span> <span class="n">axm_w</span><span class="p">,</span> <span class="n">axm_h</span><span class="p">])</span>  <span class="c"># axes for the data matrix</span>
+    <span class="n">xt</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="n">column_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">idx2</span> <span class="o">=</span> <span class="n">Z2</span><span class="p">[</span><span class="s">&#39;leaves&#39;</span><span class="p">]</span> <span class="c">### apply the clustering for the array-dendrograms to the actual matrix data</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[:,</span><span class="n">idx2</span><span class="p">]</span>
+        <span class="n">ind2</span> <span class="o">=</span> <span class="n">ind2</span><span class="p">[:,</span><span class="n">idx2</span><span class="p">]</span> <span class="c">### reorder the flat cluster to match the order of the leaves the dendrogram</span>
+    <span class="k">if</span> <span class="n">row_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">idx1</span> <span class="o">=</span> <span class="n">Z1</span><span class="p">[</span><span class="s">&#39;leaves&#39;</span><span class="p">]</span> <span class="c">### apply the clustering for the gene-dendrograms to the actual matrix data</span>
+        <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[</span><span class="n">idx1</span><span class="p">,:]</span>   <span class="c"># xt is transformed x</span>
+        <span class="n">ind1</span> <span class="o">=</span> <span class="n">ind1</span><span class="p">[</span><span class="n">idx1</span><span class="p">,:]</span> <span class="c">### reorder the flat cluster to match the order of the leaves the dendrogram</span>
+    <span class="c">### taken from http://stackoverflow.com/questions/2982929/plotting-results-of-hierarchical-clustering-ontop-of-a-matrix-of-data-in-python/3011894#3011894</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">axm</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">xt</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span> <span class="c">### norm=norm added to scale coloring of expression with zero = white or black</span>
+    <span class="n">axm</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span> <span class="c">### Hides x-ticks</span>
+    <span class="n">axm</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+
+    <span class="c"># Add text</span>
+    <span class="n">new_row_header</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">new_column_header</span><span class="o">=</span><span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">row_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_header</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">100</span><span class="p">:</span> <span class="c">### Don&#39;t visualize gene associations when more than 100 rows</span>
+                <span class="n">axm</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;  &#39;</span><span class="o">+</span><span class="n">row_header</span><span class="p">[</span><span class="n">idx1</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">36</span><span class="o">*</span><span class="mi">12</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">new_row_header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_header</span><span class="p">[</span><span class="n">idx1</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_header</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">100</span><span class="p">:</span> <span class="c">### Don&#39;t visualize gene associations when more than 100 rows</span>
+                <span class="n">axm</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="s">&#39;  &#39;</span><span class="o">+</span><span class="n">row_header</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">36</span><span class="o">*</span><span class="mi">12</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="c">### When not clustering rows</span>
+            <span class="n">new_row_header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_header</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">column_method</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">axm</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">+</span><span class="n">column_header</span><span class="p">[</span><span class="n">idx2</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;top&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">18</span><span class="o">*</span><span class="mi">12</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="c"># rotation could also be degrees</span>
+            <span class="n">new_column_header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_header</span><span class="p">[</span><span class="n">idx2</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c">### When not clustering columns</span>
+            <span class="n">axm</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">+</span><span class="n">column_header</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s">&quot;top&quot;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s">&quot;center&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">18</span><span class="o">*</span><span class="mi">12</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">new_column_header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column_header</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c"># Plot colside colors</span>
+    <span class="c"># axc --&gt; axes for column side colorbar</span>
+    <span class="c">#if column_method != None:</span>
+    <span class="c">#    axc = fig.add_axes([axc_x, axc_y, axc_w, axc_h])  # axes for column side colorbar</span>
+    <span class="c">#    cmap_c = mpl.colors.ListedColormap([&#39;r&#39;, &#39;g&#39;, &#39;b&#39;, &#39;y&#39;, &#39;w&#39;, &#39;k&#39;, &#39;m&#39;])</span>
+    <span class="c">#    dc = numpy.array(ind2, dtype=int)</span>
+    <span class="c">#    dc.shape = (1,len(ind2)) </span>
+    <span class="c">#    im_c = axc.matshow(dc, aspect=&#39;auto&#39;, origin=&#39;lower&#39;, cmap=cmap_c)</span>
+    <span class="c">#    axc.set_xticks([]) ### Hides ticks</span>
+    <span class="c">#    axc.set_yticks([])</span>
+    
+    <span class="c"># Plot rowside colors</span>
+    <span class="c"># axr --&gt; axes for row side colorbar</span>
+    <span class="c">#if row_method != None:</span>
+    <span class="c">#    axr = fig.add_axes([axr_x, axr_y, axr_w, axr_h])  # axes for column side colorbar</span>
+    <span class="c">#    dr = numpy.array(ind1, dtype=int)</span>
+    <span class="c">#    dr.shape = (len(ind1),1)</span>
+        <span class="c">#print ind1, len(ind1)</span>
+    <span class="c">#    cmap_r = mpl.colors.ListedColormap([&#39;r&#39;, &#39;g&#39;, &#39;b&#39;, &#39;y&#39;, &#39;w&#39;, &#39;k&#39;, &#39;m&#39;])</span>
+    <span class="c">#    im_r = axr.matshow(dr, aspect=&#39;auto&#39;, origin=&#39;lower&#39;, cmap=cmap_r)</span>
+    <span class="c">#    axr.set_xticks([]) ### Hides ticks</span>
+    <span class="c">#    axr.set_yticks([])</span>
+
+    <span class="c"># Plot color legend</span>
+    <span class="n">axcb</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">axcb_x</span><span class="p">,</span> <span class="n">axcb_y</span><span class="p">,</span> <span class="n">axcb_w</span><span class="p">,</span> <span class="n">axcb_h</span><span class="p">],</span> <span class="n">frame_on</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>  <span class="c"># axes for colorbar</span>
+    <span class="n">cb</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">colorbar</span><span class="o">.</span><span class="n">ColorbarBase</span><span class="p">(</span><span class="n">axcb</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s">&#39;vertical&#39;</span><span class="p">)</span>
+    <span class="n">axcb</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">&quot;colorkey&quot;</span><span class="p">,</span> <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">12</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">root_dir</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;/&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;/&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">root_dir</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">root_dir</span><span class="o">+</span><span class="s">&#39;Clustering-</span><span class="si">%s</span><span class="s">-hierarchical_</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">.pdf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dataset_name</span><span class="p">,</span><span class="n">column_metric</span><span class="p">,</span><span class="n">row_metric</span><span class="p">)</span>
+    <span class="n">cb</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s">&quot;Datt values&quot;</span><span class="p">)</span>
+    <span class="n">exportFlatClusterData</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">new_row_header</span><span class="p">,</span><span class="n">new_column_header</span><span class="p">,</span><span class="n">xt</span><span class="p">,</span><span class="n">ind1</span><span class="p">,</span><span class="n">ind2</span><span class="p">)</span>
+
+    <span class="c">### Render the graphic</span>
+    <span class="c">#if len(row_header)&gt;50 or len(column_header)&gt;50:</span>
+    <span class="c">#    pylab.rcParams[&#39;font.size&#39;] = 5</span>
+    <span class="c">#else:</span>
+    <span class="c">#    pylab.rcParams[&#39;font.size&#39;] = 8</span>
+
+    <span class="n">pylab</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s">&#39;Exporting:&#39;</span><span class="p">,</span><span class="n">filename</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="s">&#39;png&#39;</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span> <span class="c">#,dpi=200</span>
+    <span class="n">pylab</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="getColorRange"><a class="viewcode-back" href="../test2.html#test2.getColorRange">[docs]</a><span class="k">def</span> <span class="nf">getColorRange</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Determines the range of colors, centered at zero, for normalizing cmap &quot;&quot;&quot;</span>
+    <span class="n">vmax</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">vmin</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">vmax</span><span class="o">&lt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">vmin</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span> <span class="n">direction</span> <span class="o">=</span> <span class="s">&#39;negative&#39;</span>
+    <span class="k">elif</span> <span class="n">vmax</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">vmin</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> <span class="n">direction</span> <span class="o">=</span> <span class="s">&#39;positive&#39;</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">direction</span> <span class="o">=</span> <span class="s">&#39;both&#39;</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s">&#39;both&#39;</span><span class="p">:</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">vmax</span><span class="p">,</span><span class="nb">abs</span><span class="p">(</span><span class="n">vmin</span><span class="p">)])</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">vmax</span>
+        <span class="k">return</span> <span class="n">vmax</span><span class="p">,</span><span class="n">vmin</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vmax</span><span class="p">,</span><span class="n">vmin</span>
+    
+<span class="c">################# Export the flat cluster data #################</span>
+</div>
+<div class="viewcode-block" id="exportFlatClusterData"><a class="viewcode-back" href="../test2.html#test2.exportFlatClusterData">[docs]</a><span class="k">def</span> <span class="nf">exportFlatClusterData</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">new_row_header</span><span class="p">,</span><span class="n">new_column_header</span><span class="p">,</span><span class="n">xt</span><span class="p">,</span><span class="n">ind1</span><span class="p">,</span><span class="n">ind2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Export the clustered results as a text file, only indicating the flat-clusters rather than the tree &quot;&quot;&quot;</span>
+    
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;.pdf&#39;</span><span class="p">,</span><span class="s">&#39;.txt&#39;</span><span class="p">)</span>
+    <span class="n">export_text</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">column_header</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;UID&#39;</span><span class="p">,</span><span class="s">&#39;row_clusters-flat&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">new_column_header</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c">### format column-names for export</span>
+    <span class="n">export_text</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">column_header</span><span class="p">)</span>
+    <span class="n">column_clusters</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;column_clusters-flat&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">]</span><span class="o">+</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">ind2</span><span class="p">),</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c">### format column-flat-clusters for export</span>
+    <span class="n">export_text</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">column_clusters</span><span class="p">)</span>
+    
+    <span class="c">### The clusters, dendrogram and flat clusters are drawn bottom-up, so we need to reverse the order to match</span>
+    <span class="n">new_row_header</span> <span class="o">=</span> <span class="n">new_row_header</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">xt</span> <span class="o">=</span> <span class="n">xt</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="c">### Export each row in the clustered data matrix xt</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">:</span>
+        <span class="n">export_text</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">new_row_header</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="nb">str</span><span class="p">(</span><span class="n">ind1</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span><span class="o">+</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">export_text</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c">### Export as CDT file</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;.txt&#39;</span><span class="p">,</span><span class="s">&#39;.cdt&#39;</span><span class="p">)</span>
+    <span class="n">export_cdt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">column_header</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;UNIQID&#39;</span><span class="p">,</span><span class="s">&#39;NAME&#39;</span><span class="p">,</span><span class="s">&#39;GWEIGHT&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">new_column_header</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c">### format column-names for export</span>
+    <span class="n">export_cdt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">column_header</span><span class="p">)</span>
+    <span class="n">eweight</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;EWEIGHT&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">]</span><span class="o">+</span> <span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">new_column_header</span><span class="p">),</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="c">### format column-flat-clusters for export</span>
+    <span class="n">export_cdt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">eweight</span><span class="p">)</span>
+    
+    <span class="c">### Export each row in the clustered data matrix xt</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">xt</span><span class="p">:</span>
+        <span class="n">export_cdt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">new_row_header</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="p">[</span><span class="s">&#39;1&#39;</span><span class="p">]</span><span class="o">+</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">row</span><span class="p">),</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">export_cdt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c">################# Create Custom Color Gradients #################</span>
+<span class="c">#http://matplotlib.sourceforge.net/examples/pylab_examples/custom_cmap.html</span>
+</div>
+<div class="viewcode-block" id="RedBlackSkyBlue"><a class="viewcode-back" href="../test2.html#test2.RedBlackSkyBlue">[docs]</a><span class="k">def</span> <span class="nf">RedBlackSkyBlue</span><span class="p">():</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:</span>   <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;blue&#39;</span><span class="p">:</span>  <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="p">}</span>
+
+    <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span><span class="n">cdict</span><span class="p">,</span><span class="mi">256</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">my_cmap</span>
+</div>
+<div class="viewcode-block" id="RedBlackBlue"><a class="viewcode-back" href="../test2.html#test2.RedBlackBlue">[docs]</a><span class="k">def</span> <span class="nf">RedBlackBlue</span><span class="p">():</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:</span>   <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+
+             <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;blue&#39;</span><span class="p">:</span>  <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="p">}</span>
+
+    <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span><span class="n">cdict</span><span class="p">,</span><span class="mi">256</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">my_cmap</span>
+</div>
+<div class="viewcode-block" id="RedBlackGreen"><a class="viewcode-back" href="../test2.html#test2.RedBlackGreen">[docs]</a><span class="k">def</span> <span class="nf">RedBlackGreen</span><span class="p">():</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:</span>   <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;blue&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;green&#39;</span><span class="p">:</span>  <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="p">}</span>
+    
+    <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span><span class="n">cdict</span><span class="p">,</span><span class="mi">256</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">my_cmap</span>
+</div>
+<div class="viewcode-block" id="YellowBlackBlue"><a class="viewcode-back" href="../test2.html#test2.YellowBlackBlue">[docs]</a><span class="k">def</span> <span class="nf">YellowBlackBlue</span><span class="p">():</span>
+    <span class="n">cdict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;red&#39;</span><span class="p">:</span>   <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;green&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)),</span>
+    
+             <span class="s">&#39;blue&#39;</span><span class="p">:</span>  <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                       <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+            <span class="p">}</span>
+    <span class="c">### yellow is created by adding y = 1 to RedBlackSkyBlue green last tuple</span>
+    <span class="c">### modulate between blue and cyan using the last y var in the first green tuple</span>
+    <span class="n">my_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="p">(</span><span class="s">&#39;my_colormap&#39;</span><span class="p">,</span><span class="n">cdict</span><span class="p">,</span><span class="mi">256</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">my_cmap</span>
+
+<span class="c">################# General data import methods #################</span>
+</div>
+<div class="viewcode-block" id="importData"><a class="viewcode-back" href="../test2.html#test2.importData">[docs]</a><span class="k">def</span> <span class="nf">importData</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">matrix</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">row_header</span><span class="o">=</span><span class="p">[]</span>
+    <span class="n">first_row</span><span class="o">=</span><span class="bp">True</span>
+
+    <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset_name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+        
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s">&#39;rU&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">xreadlines</span><span class="p">():</span>         
+        <span class="n">t</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span> <span class="c">### remove end-of-line character - file is tab-delimited</span>
+        <span class="k">if</span> <span class="n">first_row</span><span class="p">:</span>
+            <span class="n">column_header</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="n">first_row</span><span class="o">=</span><span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">t</span> <span class="ow">and</span> <span class="s">&#39;&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span> <span class="c">### Occurs for rows with missing data</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span><span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="n">matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="n">row_header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            
+    <span class="n">time_diff</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="se">\n</span><span class="si">%d</span><span class="s"> rows and </span><span class="si">%d</span><span class="s"> columns imported for </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s"> seconds...&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">column_header</span><span class="p">),</span><span class="n">dataset_name</span><span class="p">,</span><span class="n">time_diff</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;No data in input file.&#39;</span><span class="p">;</span> <span class="n">force_error</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">column_header</span><span class="p">,</span> <span class="n">row_header</span>
+  </div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    
+    <span class="c">################  Default Methods ################</span>
+    <span class="n">row_method</span> <span class="o">=</span> <span class="s">&#39;average&#39;</span>
+    <span class="n">column_method</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">row_metric</span> <span class="o">=</span> <span class="s">&#39;euclidean&#39;</span>
+    <span class="n">column_metric</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">color_gradient</span> <span class="o">=</span> <span class="s">&#39;red_white_blue&#39;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;medianZeros.txt&#39;</span><span class="p">)</span>
+    
+    <span class="n">matrix</span><span class="p">,</span> <span class="n">column_header</span><span class="p">,</span> <span class="n">row_header</span> <span class="o">=</span> <span class="n">importData</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">heatmap</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">row_header</span><span class="p">,</span> <span class="n">column_header</span><span class="p">,</span> <span class="n">row_method</span><span class="p">,</span> <span class="n">column_method</span><span class="p">,</span> <span class="n">row_metric</span><span class="p">,</span> <span class="n">column_metric</span><span class="p">,</span> <span class="n">color_gradient</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Error using </span><span class="si">%s</span><span class="s"> ... trying euclidean instead&#39;</span> <span class="o">%</span> <span class="n">row_metric</span>
+            <span class="n">row_metric</span> <span class="o">=</span> <span class="s">&#39;euclidean&#39;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">heatmap</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">row_header</span><span class="p">,</span> <span class="n">column_header</span><span class="p">,</span> <span class="n">row_method</span><span class="p">,</span> <span class="n">column_method</span><span class="p">,</span> <span class="n">row_metric</span><span class="p">,</span> <span class="n">column_metric</span><span class="p">,</span> <span class="n">color_gradient</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&#39;Error with clustering encountered&#39;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">home</a>|&nbsp;</li>
+        <li><a href="../search.html">search</a>|&nbsp;</li>
+	<li><a href="../contents.html">documentation </a> &raquo;</li>
+
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joey Davis.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

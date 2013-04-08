@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jhdavisVizLib Module &mdash; qMSClustering 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="qMSClustering 0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><img src="_static/logo.png" border="0" alt="qMSClustering"/></a>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+	<li><a href="contents.html">documentation </a> &raquo;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/jhdavisVizLib.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-jhdavisVizLib">
+<span id="jhdavisvizlib-module"></span><h1>jhdavisVizLib Module<a class="headerlink" href="#module-jhdavisVizLib" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="jhdavisVizLib.drawHeatMap">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawHeatMap</tt><big>(</big><em>xdat</em>, <em>name='unnamed'</em>, <em>colors=&lt;matplotlib.colors.LinearSegmentedColormap instance at 0x34d9758&gt;</em>, <em>dendro=False</em>, <em>protColors=None</em>, <em>cIndex=None</em>, <em>km=None</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawHeatMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawHeatMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>drawHeatMap produces a colored heatmap in a new figure window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xdat</strong> (<em>dict</em>) &#8211; a data object (must contain fields &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;)</li>
+<li><strong>colors</strong> (<em>cmap</em>) &#8211; a color scale (a cmap)</li>
+<li><strong>name</strong> (<em>str.</em>) &#8211; figure name and title</li>
+<li><strong>dendro</strong> (<em>bool.</em>) &#8211; a boolean to draw the dendrogram on the left</li>
+<li><strong>protColors</strong> (<em>cmap</em>) &#8211; a color map used to label the protein names with group colors</li>
+<li><strong>cIndex</strong> (<em>list</em>) &#8211; a list of groupIds for the proteins</li>
+<li><strong>km</strong> (<em>matrix</em>) &#8211; if present, will draw the kmeans cluster profiles at the top of the figure- input is a 2d-matrix - rowVectors for each centroid, each column is a fraction</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int &#8211; the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first">AttributeError, KeyError</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a figure object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.drawKmClusteredData">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawKmClusteredData</tt><big>(</big><em>clusteredData</em>, <em>kClusters</em>, <em>finalPIndex</em>, <em>colorIndex</em>, <em>finalCents</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawKmClusteredData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawKmClusteredData" title="Permalink to this definition">¶</a></dt>
+<dd><p>drawKmClusteredData draws a heatmap of the clusteredData with the centroid above</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>clusteredData</strong> (<em>dict</em>) &#8211; a data object (must contain fields &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;)</li>
+<li><strong>kClusters</strong> (<em>int</em>) &#8211; number of centroids</li>
+<li><strong>finalPIndex</strong> (<em>2D datamatrix</em>) &#8211; a list of the centroids each protein is in (sorted same as clusteredData[&#8216;proteins&#8217;]</li>
+<li><strong>colorIndex</strong> &#8211; a list of the centroids each protein is in (sorted same as clusteredData[&#8216;proteins&#8217;]</li>
+<li><strong>finalPIndex</strong> &#8211; a list of the centroids each protein is in (sorted same as clusteredData[&#8216;proteins&#8217;]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Typecolorindexd :</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">2D datamatrix</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a resampled 2D datamatrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.drawProfiles">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawProfiles</tt><big>(</big><em>km</em>, <em>cIndex=&lt;matplotlib.colors.LinearSegmentedColormap instance at 0x34d75a8&gt;</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawProfiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawProfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>drawProfiles draws a scater plot of the given row vectors (points evenly spaced)
+the points are shaded along the given cmap by position in the array of arrays (km)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>km</strong> (<em>cmap</em>) &#8211; a 2D array where each row vector is a separate profile to plte</li>
+<li><strong>cIndex</strong> &#8211; a color map, each row will take a differnt (equally spaced) color from the cmap</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a handle to the resulting figure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.drawResidDist">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawResidDist</tt><big>(</big><em>toDisplay</em>, <em>name</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawResidDist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawResidDist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.drawSVDResidualPlot">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawSVDResidualPlot</tt><big>(</big><em>meanAltArray</em>, <em>stdAltArray</em>, <em>meanNullArray</em>, <em>stdNullArray</em>, <em>sigmas</em>, <em>fig=None</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawSVDResidualPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawSVDResidualPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>drawSVDResidualPlot draws a scater plot with the mean alternate hypothesis and mean null hypothesis.
+the plots are shadded by the desired number of sigmas. a blue dot shows the difference between the two means</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>meanAltArray</strong> (<em>list (length of number of components)</em>) &#8211; a list of alternate hypothesis mean values</li>
+<li><strong>stdAltArray</strong> (<em>list (length of number of components)</em>) &#8211; a list of alternate hypothesis std values</li>
+<li><strong>meanNullArray</strong> (<em>list (length of number of components)</em>) &#8211; a list of null hypothesis mean values</li>
+<li><strong>stdNullArray</strong> (<em>list (length of number of components)</em>) &#8211; a list of null hypothesis std values</li>
+<li><strong>sigmas</strong> (<em>int</em>) &#8211; number of sigmas to plot</li>
+<li><strong>fig</strong> (<em>matplotlib figure, defaults to new figure</em>) &#8211; a figure handle to draw in</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a handle to the resulting figure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.drawThreePanelHeatMap">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">drawThreePanelHeatMap</tt><big>(</big><em>xdat</em>, <em>ydat</em>, <em>zdat</em>, <em>n1='dat1'</em>, <em>n2='dat2'</em>, <em>n3='dat3'</em>, <em>colors=&lt;matplotlib.colors.LinearSegmentedColormap instance at 0x34d9758&gt;</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#drawThreePanelHeatMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.drawThreePanelHeatMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>draws a figure with 3 heatmap panels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xdat</strong> (<em>dictionary, must contain &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;</em>) &#8211; first panel data object</li>
+<li><strong>ydat</strong> (<em>dictionary, must contain &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;</em>) &#8211; first panel data object</li>
+<li><strong>zdat</strong> (<em>dictionary, must contain &#8216;data&#8217;, &#8216;fractions&#8217;, &#8216;proteins&#8217;</em>) &#8211; first panel data object</li>
+<li><strong>n1</strong> (<em>string</em>) &#8211; name of panel 1</li>
+<li><strong>n2</strong> (<em>string</em>) &#8211; name of panel 2</li>
+<li><strong>n3</strong> (<em>string</em>) &#8211; name of panel 3</li>
+<li><strong>colors</strong> (<em>colormap</em>) &#8211; the colormap to be used in tieh figure</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">array bearing the calculated residual for each additional component</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.findIndices">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">findIndices</tt><big>(</big><em>g</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#findIndices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.findIndices" title="Permalink to this definition">¶</a></dt>
+<dd><p>findIndices is a  helper function that likely should be deleted</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.heatMapAxes">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">heatMapAxes</tt><big>(</big><em>data, dims=[0.1, 0.1, 0.7, 0.7], colors=&lt;matplotlib.colors.LinearSegmentedColormap instance at 0x34d9758&gt;, fractions=None, proteins=None, protColors=None, cIndex=None, fig=None</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#heatMapAxes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.heatMapAxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>heatMapAxes draws a heatmap</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> &#8211; a datamatrix to draw</li>
+<li><strong>dims</strong> (<em>list (4 elements)</em>) &#8211; the size of the plot to draw - defaults to full window</li>
+<li><strong>colors</strong> (<em>cmap</em>) &#8211; color index to use - defaults to redblue</li>
+<li><strong>fractions</strong> (<em>list</em>) &#8211; fraction names</li>
+<li><strong>proteins</strong> (<em>list</em>) &#8211; protein names</li>
+<li><strong>protColors</strong> (<em>cmap</em>) &#8211; a color map used to label the protein names with group colors</li>
+<li><strong>cIndex</strong> (<em>list</em>) &#8211; a list of groupIds for the proteins</li>
+<li><strong>fig</strong> (<em>matplotlib figure</em>) &#8211; where to plot the axes (which figure); defaults to new figure</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">an axes</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.listReplace">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">listReplace</tt><big>(</big><em>l</em>, <em>to</em>, <em>rv</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#listReplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.listReplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>listReplace is a helper function replaces all occurances of to with rv in a list l</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>l</strong> (<em>list</em>) &#8211; list to be replaced</li>
+<li><strong>to</strong> (<em>string</em>) &#8211; item to be replaced</li>
+<li><strong>rv</strong> (<em>string</em>) &#8211; item to replace with</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list with all occurances of to replaced with rv</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.mapGroups">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">mapGroups</tt><big>(</big><em>groupList</em>, <em>letters</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#mapGroups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.mapGroups" title="Permalink to this definition">¶</a></dt>
+<dd><p>mapGroups is a  helper function that maps groups numbers to letters - likely should be deleted</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>groupList</strong> &#8211; a list to be mapped</li>
+<li><strong>letters</strong> (<em>list</em>) &#8211; a list to be mapped onto</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list with elements of groupList mapped onto the letters</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.performAllReconstructions">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">performAllReconstructions</tt><big>(</big><em>xdat</em>, <em>U</em>, <em>Sig</em>, <em>Vh</em>, <em>figure=False</em>, <em>colors=&lt;matplotlib.colors.LinearSegmentedColormap instance at 0x34d9758&gt;</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#performAllReconstructions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.performAllReconstructions" title="Permalink to this definition">¶</a></dt>
+<dd><p>performs all possible reconstructions of the dataset that has been factored by SVD</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>xdata</strong> &#8211; the data object to be reconstructed/analyzed</li>
+<li><strong>U</strong> (<em>2D matrix</em>) &#8211; the 2D matrix U</li>
+<li><strong>Sig</strong> (<em>2D matrix</em>) &#8211; the 2D matrix Sig</li>
+<li><strong>Vh</strong> (<em>2D matrix</em>) &#8211; the 2D matrix Vh</li>
+<li><strong>colors</strong> (<em>colormap</em>) &#8211; the colormap to be used in tieh figure</li>
+<li><strong>figure</strong> (<em>boolean</em>) &#8211; whether to display the figures</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">array bearing the calculated residual for each additional component</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.plotComponents">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">plotComponents</tt><big>(</big><em>U</em>, <em>comps</em>, <em>proteins=None</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#plotComponents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.plotComponents" title="Permalink to this definition">¶</a></dt>
+<dd><p>plots the specified number of components in a new figure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>U</strong> &#8211; the U matrix from the SVD</li>
+<li><strong>comps</strong> (<em>int</em>) &#8211; the number of components to plot</li>
+<li><strong>proteins</strong> (<em>list</em>) &#8211; the protein names, if none will just list numbers</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">and figure with the ploted heat map</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="jhdavisVizLib.printSortedDict">
+<tt class="descclassname">jhdavisVizLib.</tt><tt class="descname">printSortedDict</tt><big>(</big><em>d</em><big>)</big><a class="reference internal" href="_modules/jhdavisVizLib.html#printSortedDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#jhdavisVizLib.printSortedDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>printSortedDict is a helper function to print a dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>d</strong> (<em>dict</em>) &#8211; a dictionary to be printed</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a string of the dictionary</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+	<li><a href="contents.html">documentation </a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Joey Davis.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
