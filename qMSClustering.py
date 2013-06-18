@@ -13,7 +13,7 @@ import matplotlib._pylab_helpers
 
 from matplotlib.mlab import PCA
 from mpl_toolkits.mplot3d import proj3d
-from jhdavisVizLib import *
+from vizLib import *
 from string import ascii_letters
 from matplotlib import mpl
 from mpl_toolkits.mplot3d import Axes3D
@@ -498,7 +498,7 @@ if __name__ == '__main__':
     colors = pylab.cm.RdBu
     method = 'ward'
     metric = 'euclidean'
-    path = '/home/jhdavis/scripts/python/qMSClustering/testData/'
+    path = '/home/jhdavis/scripts/python/clustering/qMSClustering/testData/'
     fileToRead = path+'ssc_50S_medLN_zeros.txt'
     errorFile = path+'ssc_50S_stdErrLN_zeros.txt'
     testNumber = 5
@@ -527,14 +527,14 @@ if __name__ == '__main__':
     cluteredMap = drawHeatMap(clusteredData, "clusteredMap", dendro=True)
     cluteredMap = drawHeatMap(errData, "stdErrorMeanMap", dendro=False)
     
-    U, Sig, Vh = SVD(clusteredData['data'])
+ #   U, Sig, Vh = SVD(clusteredData['data'])
 
-    performAllReconstructions(clusteredData, U, Sig, Vh, figure=False)
+#    performAllReconstructions(clusteredData, U, Sig, Vh, figure=False)
         
-    resampleUsingErr(clusteredData['data'], clusteredErr['data'])
+#    resampleUsingErr(clusteredData['data'], clusteredErr['data'])
 
-    [uAlt, sigAlt, uNull, sigNull] = determineSVDResiduals(clusteredData, clusteredErr, testNumber=100)
-    drawSVDResidualPlot(uAlt, sigAlt, uNull, sigNull, sigmas)
+#    [uAlt, sigAlt, uNull, sigNull] = determineSVDResiduals(clusteredData, clusteredErr, testNumber=100)
+#    drawSVDResidualPlot(uAlt, sigAlt, uNull, sigNull, sigmas)
     #doProjections(clusteredData, pltPCA, pltPCA, (not doPCA))
     #doProjections(clusteredData, pltPCA, pltPCA, doPCA, protColors=protColorIndex, cIndex=colorIndex)
     kclusters = kClusters
